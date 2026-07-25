@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.deploy/
+.env
+.env.*
+!.env.example
+credentials.txt
+*.log
+.playwright-cli/
+.vite-ssg-temp/
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db

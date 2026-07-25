@@ -1,0 +1,32 @@
+{
+  "name": "ai-blog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4173",
+    "build:ssg": "vite-ssg build",
+    "build": "npm run build:ssg && node scripts/obfuscate.mjs && node scripts/generate-sitemap.mjs",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "preview": "vite preview --host 127.0.0.1 --port 4173"
+  },
+  "dependencies": {
+    "@unhead/vue": "^2.0.14",
+    "lucide-vue-next": "^0.468.0",
+    "markdown-it": "^14.1.0",
+    "vite-ssg": "^28.2.0",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "javascript-obfuscator": "^5.1.0",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4",
+    "vue-tsc": "^3.0.4"
+  }
+}

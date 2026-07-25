@@ -1,0 +1,8 @@
+{
+  "generatedAt": "2026-07-25T05:48:29Z",
+  "projects": {
+    "quant": { "state": "live" },
+    "crossborder": { "state": "live" },
+    "cockpit": { "state": "live" }
+  }
+}
