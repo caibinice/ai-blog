@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { ArrowUpRight, RefreshCcw } from 'lucide-vue-next'
 import { useHead } from '@unhead/vue'
+import { localeTags } from '../lib/i18n'
 import { useLocale } from '../lib/useLocale'
 
 interface NewsItem {
@@ -11,7 +12,7 @@ interface NewsItem {
   publishedAt: string
 }
 
-const { t } = useLocale()
+const { locale, t } = useLocale()
 const items = ref<NewsItem[]>([])
 const loading = ref(false)
 const error = ref(false)
@@ -39,12 +40,12 @@ useHead(computed(() => ({ title: `${t.value.newsTitle} · Fish` })))
   <section class="page-section section-shell">
     <header class="page-heading page-heading-row">
       <div>
-        <p class="eyebrow">OFFICIAL FEEDS</p>
+        <p class="eyebrow">{{ t.feedsEyebrow }}</p>
         <h1>{{ t.newsTitle }}</h1>
         <p>{{ t.newsBody }}</p>
       </div>
       <button class="secondary-button compact-button" type="button" :disabled="loading" @click="load">
-        <RefreshCcw :size="16" :class="{ spinning: loading }" /> Refresh
+        <RefreshCcw :size="16" :class="{ spinning: loading }" /> {{ t.refresh }}
       </button>
     </header>
     <div v-if="loading && !items.length" class="news-skeleton">
@@ -56,7 +57,7 @@ useHead(computed(() => ({ title: `${t.value.newsTitle} · Fish` })))
         <div>
           <span class="source-label">{{ item.source }}</span>
           <h2>{{ item.title }}</h2>
-          <time :datetime="item.publishedAt">{{ new Date(item.publishedAt).toLocaleDateString() }}</time>
+          <time :datetime="item.publishedAt">{{ new Date(item.publishedAt).toLocaleDateString(localeTags[locale]) }}</time>
         </div>
         <ArrowUpRight :size="20" />
       </a>

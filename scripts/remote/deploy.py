@@ -16,6 +16,7 @@ CODES_ROOT = BLOG_ROOT.parent
 QUANT_ROOT = CODES_ROOT / "ai-quantum"
 CROSS_ROOT = CODES_ROOT / "crossborder-trend-report"
 COCKPIT_ROOT = CODES_ROOT / "ai-agent-rag-demo"
+SHARED_CREDENTIALS = BLOG_ROOT / "credentials.txt"
 
 sys.path.insert(0, str(QUANT_ROOT / "scripts" / "remote"))
 from remote_client import RemoteClient  # noqa: E402
@@ -26,6 +27,29 @@ def read_ini(path: Path) -> configparser.ConfigParser:
     if not parser.read(path, encoding="utf-8"):
         raise RuntimeError(f"Missing credentials file: {path}")
     return parser
+
+
+def scoped_ini(
+    parser: configparser.ConfigParser, namespace: str
+) -> configparser.ConfigParser:
+    resolved = configparser.ConfigParser(interpolation=None)
+    prefix = f"{namespace}."
+    for section in parser.sections():
+        if not section.startswith(prefix):
+            resolved[section] = dict(parser[section])
+    for section in parser.sections():
+        if section.startswith(prefix):
+            resolved[section.removeprefix(prefix)] = dict(parser[section])
+    return resolved
+
+
+def read_project_ini(
+    project_root: Path, namespace: str
+) -> configparser.ConfigParser:
+    local = project_root / "credentials.txt"
+    if local.exists():
+        return read_ini(local)
+    return scoped_ini(read_ini(SHARED_CREDENTIALS), namespace)
 
 
 def commit_id(root: Path) -> str:
@@ -134,10 +158,15 @@ def main() -> None:
         print("Local deployment secrets are ready in ignored .deploy directories.")
         return
 
-    cross_credentials = read_ini(CROSS_ROOT / "credentials.txt")
-    cockpit_credentials = read_ini(COCKPIT_ROOT / "credentials.txt")
+    cross_credentials = read_project_ini(CROSS_ROOT, "crossborder")
+    cockpit_credentials = read_project_ini(COCKPIT_ROOT, "cockpit")
     cross_mysql = cross_credentials["mysql.remote"]
     cross_llm = cross_credentials["deepseek.api"]
+    cross_rakuten = (
+        cross_credentials["rakuten.api"]
+        if cross_credentials.has_section("rakuten.api")
+        else {}
+    )
     cockpit_mysql = cockpit_credentials["mysql.remote"]
     cockpit_vector = cockpit_credentials["postgresql.vector"]
     cockpit_llm = cockpit_credentials["deepseek.api"]
@@ -191,6 +220,14 @@ def main() -> None:
             "DEEPSEEK_BASE_URL": cross_llm.get("base-url", "https://api.deepseek.com"),
             "DEEPSEEK_API_KEY": cross_llm["api-key"],
             "DEEPSEEK_MODEL": cross_llm.get("model", "deepseek-v4-pro"),
+            "RAKUTEN_APPLICATION_ID": cross_rakuten.get("application_id", ""),
+            "RAKUTEN_ACCESS_KEY": cross_rakuten.get("access_key", ""),
+            "RAKUTEN_AFFILIATE_ID": cross_rakuten.get("affiliate_id", ""),
+            "RAKUTEN_API_VERSION": cross_rakuten.get("api_version", "20260701"),
+            "RAKUTEN_API_BASE_URL": cross_rakuten.get(
+                "api_base_url",
+                "https://api-gateway-prod.gslb.rdcnw.net",
+            ),
         }
     )
     cockpit_env = systemd_env(
@@ -341,6 +378,14 @@ for root in /opt/ai-blog /opt/crossborder-trend-report /opt/enterprise-ai-cockpi
 done
 
 rm -f {' '.join(remote_paths.values())} /tmp/crossborder-app.env /tmp/cockpit-app.env
+systemctl stop ai-platform-resource-sample.service >/dev/null 2>&1 || true
+for _attempt in $(seq 1 20); do
+  if ! systemctl status ai-platform-resource-sample.service >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.25
+done
+systemctl reset-failed ai-platform-resource-sample.service >/dev/null 2>&1 || true
 systemd-run --unit=ai-platform-resource-sample --collect \\
   /usr/local/sbin/ai-platform-sample-resources >/dev/null
 """

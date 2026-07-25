@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { articleMeta, getArticle, listArticles } from './articles'
-import { localizedPath, type Locale } from './i18n'
+import { copy, localizedPath, type Locale } from './i18n'
 
 describe('localized static content', () => {
   const locales: Locale[] = ['zh', 'en', 'ja']
@@ -24,5 +24,14 @@ describe('localized static content', () => {
     expect(localizedPath('zh', '/articles')).toBe('/articles')
     expect(localizedPath('en', '/articles')).toBe('/en/articles')
     expect(localizedPath('ja', '/articles')).toBe('/ja/articles')
+  })
+
+  it('keeps the complete interface copy aligned across languages', () => {
+    const keys = Object.keys(copy.zh).sort()
+    expect(Object.keys(copy.en).sort()).toEqual(keys)
+    expect(Object.keys(copy.ja).sort()).toEqual(keys)
+    expect(JSON.stringify(copy)).not.toMatch(/tokyo/i)
+    expect(new Set([copy.zh.writingBody, copy.en.writingBody, copy.ja.writingBody]).size).toBe(3)
+    expect(new Set([copy.zh.footerTagline, copy.en.footerTagline, copy.ja.footerTagline]).size).toBe(3)
   })
 })

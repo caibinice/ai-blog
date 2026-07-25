@@ -28,7 +28,17 @@ DeepSeek 只在开发阶段生成静态翻译：
 pwsh -File scripts/translate-content.ps1
 ```
 
-token 只从被忽略的兄弟仓库 `credentials.txt` 读取，不进入浏览器。
+真实凭据统一存放在被忽略的 `credentials.txt`，并支持项目命名空间。
+兄弟项目存在自己的 `credentials.txt` 时优先使用本地文件；本地文件缺失
+时读取博客共享文件。可从现有三个项目的本地配置安全同步，脚本不会输出
+任何值：
+
+```powershell
+pwsh -File scripts/sync-shared-credentials.ps1
+```
+
+脱敏结构见 [`credentials.example.txt`](credentials.example.txt)。DeepSeek
+token 只在本地翻译或部署阶段读取，不进入浏览器。
 生产构建关闭 source map，仅保守混淆自有业务 chunk；vendor 不混淆。
 
 ## 部署

@@ -14,6 +14,7 @@ const cards = computed(() => projects.map((project) => ({
   ...project,
   status: runtime.value.projects?.[project.key]?.state === 'paused' ? 'paused' : 'live',
 })))
+const projectAlt = (title: string) => t.value.projectScreenshot.replace('{title}', title)
 
 onMounted(async () => {
   try {
@@ -29,7 +30,7 @@ onMounted(async () => {
   <div class="project-grid">
     <a v-for="project in cards" :key="project.key" class="project-card glass-panel" :href="project.path">
       <div class="project-image" :style="{ '--project-accent': project.accent }">
-        <img :src="project.image" :alt="`${project.title[locale]} screenshot`" loading="lazy" />
+        <img :src="project.image" :alt="projectAlt(project.title[locale])" loading="lazy" />
         <span class="status-pill" :class="project.status">
           <CirclePause v-if="project.status === 'paused'" :size="13" />
           <CirclePlay v-else :size="13" />

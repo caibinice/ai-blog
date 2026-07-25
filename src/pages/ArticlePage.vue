@@ -14,7 +14,7 @@ const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
 const rendered = computed(() => article.value ? md.render(article.value.body) : '')
 
 useHead(computed(() => ({
-  title: article.value ? `${article.value.title} · Fish` : 'Article · Fish',
+  title: article.value ? `${article.value.title} · Fish` : `${t.value.articleFallbackTitle} · Fish`,
   meta: article.value ? [
     { name: 'description', content: article.value.excerpt },
     { property: 'og:title', content: article.value.title },

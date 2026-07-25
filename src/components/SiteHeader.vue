@@ -22,11 +22,11 @@ const nav = computed(() => [
   { label: t.value.nav.guestbook, path: localizedPath(locale.value, '/guestbook') },
 ])
 
-const themeItems: { id: Theme; label: string; icon: typeof Sun }[] = [
-  { id: 'bright', label: 'Bright', icon: Sun },
-  { id: 'tech-black', label: 'Tech Black', icon: MoonStar },
-  { id: 'cute-pink', label: 'Cute Pink', icon: Sparkles },
-]
+const themeItems = computed<{ id: Theme; label: string; icon: typeof Sun }[]>(() => [
+  { id: 'bright', label: t.value.themeBright, icon: Sun },
+  { id: 'tech-black', label: t.value.themeTechBlack, icon: MoonStar },
+  { id: 'cute-pink', label: t.value.themeCutePink, icon: Sparkles },
+])
 
 function setLanguage(target: Locale) {
   let path = route.path
@@ -48,7 +48,7 @@ function closeMenus() {
 
 <template>
   <header class="site-header">
-    <nav class="nav-shell glass-panel" aria-label="Primary navigation">
+    <nav class="nav-shell glass-panel" :aria-label="t.primaryNavigation">
       <RouterLink class="brand" :to="localizedPath(locale)" @pointerdown="closeMenus">
         <span class="brand-mark" aria-hidden="true">F</span>
         <span>
@@ -65,7 +65,7 @@ function closeMenus() {
 
       <div class="nav-actions">
         <div class="popover-wrap">
-          <button class="icon-button" type="button" aria-label="Choose theme" :aria-expanded="themeOpen" @click="themeOpen = !themeOpen; languageOpen = false">
+          <button class="icon-button" type="button" :aria-label="t.chooseTheme" :aria-expanded="themeOpen" @click="themeOpen = !themeOpen; languageOpen = false">
             <Palette :size="18" />
           </button>
           <Transition name="popover">
@@ -85,7 +85,7 @@ function closeMenus() {
         </div>
 
         <div class="popover-wrap">
-          <button class="icon-button" type="button" aria-label="Choose language" :aria-expanded="languageOpen" @click="languageOpen = !languageOpen; themeOpen = false">
+          <button class="icon-button" type="button" :aria-label="t.chooseLanguage" :aria-expanded="languageOpen" @click="languageOpen = !languageOpen; themeOpen = false">
             <Languages :size="18" />
           </button>
           <Transition name="popover">
@@ -97,7 +97,7 @@ function closeMenus() {
           </Transition>
         </div>
 
-        <button class="icon-button mobile-menu-button" type="button" aria-label="Toggle menu" :aria-expanded="open" @click="open = !open; closeMenus()">
+        <button class="icon-button mobile-menu-button" type="button" :aria-label="t.toggleMenu" :aria-expanded="open" @click="open = !open; closeMenus()">
           <X v-if="open" :size="19" />
           <Menu v-else :size="19" />
         </button>
@@ -105,7 +105,7 @@ function closeMenus() {
     </nav>
 
     <Transition name="sheet">
-      <nav v-if="open" class="mobile-nav glass-panel" aria-label="Mobile navigation">
+      <nav v-if="open" class="mobile-nav glass-panel" :aria-label="t.mobileNavigation">
         <RouterLink v-for="item in nav" :key="item.path" :to="item.path" @click="open = false">
           {{ item.label }}
         </RouterLink>

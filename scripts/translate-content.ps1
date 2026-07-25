@@ -1,10 +1,16 @@
 param(
-    [string]$CredentialsPath = 'D:\codes\ai-quantum\credentials.txt',
+    [string]$CredentialsPath = '',
     [string]$Proxy = 'http://127.0.0.1:20808',
     [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
+$repoRoot = Split-Path -Parent $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($CredentialsPath)) {
+    $shared = Join-Path $repoRoot 'credentials.txt'
+    $legacy = Join-Path (Split-Path $repoRoot -Parent) 'ai-quantum\credentials.txt'
+    $CredentialsPath = if (Test-Path -LiteralPath $shared) { $shared } else { $legacy }
+}
 $Root = Split-Path -Parent $PSScriptRoot
 
 function Read-IniSection {

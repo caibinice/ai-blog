@@ -13,9 +13,9 @@ useHead(computed(() => ({ title: `${t.value.nav.articles} · Fish` })))
 <template>
   <section class="page-section section-shell">
     <header class="page-heading">
-      <p class="eyebrow">WRITING</p>
+      <p class="eyebrow">{{ t.writingEyebrow }}</p>
       <h1>{{ t.allWriting }}</h1>
-      <p>Notes from building, testing, breaking, and rebuilding intelligent systems.</p>
+      <p>{{ t.writingBody }}</p>
     </header>
     <div class="article-grid">
       <ArticleCard v-for="article in articles" :key="article.slug" :article="article" :locale="locale" :reading-label="t.readingTime" />

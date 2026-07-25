@@ -35,5 +35,7 @@ for (const locale of ['zh', 'en', 'ja'] as Locale[]) {
 export const routes: RouteRecordRaw[] = [
   ...localizedRoutes,
   { path: '/manage/comments', name: 'manage-comments', component: ManageCommentsPage, meta: { locale: 'zh' } },
+  { path: '/en/:pathMatch(.*)*', name: 'not-found-en', component: NotFoundPage, meta: { locale: 'en' } },
+  { path: '/ja/:pathMatch(.*)*', name: 'not-found-ja', component: NotFoundPage, meta: { locale: 'ja' } },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundPage, meta: { locale: 'zh' } },
 ]

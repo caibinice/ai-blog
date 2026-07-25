@@ -11,7 +11,7 @@ useHead(computed(() => ({ title: `${t.value.nav.projects} · Fish` })))
 <template>
   <section class="page-section section-shell">
     <header class="page-heading">
-      <p class="eyebrow">PROJECTS</p>
+      <p class="eyebrow">{{ t.projectsEyebrow }}</p>
       <h1>{{ t.projectTitle }}</h1>
       <p>{{ t.projectBody }}</p>
     </header>

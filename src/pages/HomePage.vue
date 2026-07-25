@@ -41,28 +41,28 @@ useHead(computed(() => ({
           </RouterLink>
         </div>
         <div class="hero-facts">
-          <span><MapPin :size="15" /> Tokyo</span>
+          <span><MapPin :size="15" /> {{ t.location }}</span>
           <a href="https://github.com/caibinice" target="_blank" rel="noreferrer"><Github :size="15" /> @caibinice</a>
         </div>
       </div>
-      <aside class="signal-card glass-panel" aria-label="Current focus">
+      <aside class="signal-card glass-panel" :aria-label="t.currentFocus">
         <div class="signal-top">
           <span class="signal-dot" />
-          <small>CURRENT FOCUS</small>
+          <small>{{ t.currentFocus }}</small>
           <span>2026</span>
         </div>
         <div class="signal-visual" aria-hidden="true">
           <span v-for="index in 12" :key="index" :style="{ height: `${20 + ((index * 17) % 64)}%` }" />
         </div>
-        <h2>Research → Evidence → Systems</h2>
-        <p>Quantitative research, retrieval-augmented intelligence, and data products that survive contact with reality.</p>
+        <h2>{{ t.focusTitle }}</h2>
+        <p>{{ t.focusBody }}</p>
       </aside>
     </section>
 
     <section class="content-section section-shell">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">JOURNAL</p>
+          <p class="eyebrow">{{ t.journalEyebrow }}</p>
           <h2>{{ t.latestWriting }}</h2>
         </div>
         <RouterLink :to="localizedPath(locale, '/articles')">{{ t.allWriting }} <ArrowRight :size="17" /></RouterLink>
@@ -75,7 +75,7 @@ useHead(computed(() => ({
     <section class="content-section section-shell">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">LABS</p>
+          <p class="eyebrow">{{ t.labsEyebrow }}</p>
           <h2>{{ t.projectTitle }}</h2>
           <p>{{ t.projectBody }}</p>
         </div>

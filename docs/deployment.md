@@ -15,7 +15,12 @@
 
 环境文件和管理令牌在 `/opt/.../shared`，统一操作口令及签名密钥的本地
 副本位于忽略的 `.deploy/action-auth.json`。口令不进入前端、README 或
-Git。回滚时将对应项目的 `current` 指向上一 release，修复其
+Git。数据库、模型、Rakuten 和 SSH 等真实凭据默认从博客根目录下被忽略
+的 `credentials.txt` 读取；某个项目根目录存在自己的 `credentials.txt`
+时，本地文件完整覆盖该项目的共享配置。共享文件中的项目专属段使用
+`quant.*`、`crossborder.*`、`cockpit.*` 前缀。
+
+回滚时将对应项目的 `current` 指向上一 release，修复其
 `www/<path>` 软链接并重启对应服务。切换 Nginx 前必须执行
 `nginx -t`。
 

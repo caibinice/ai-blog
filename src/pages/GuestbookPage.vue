@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { MessageCircle, Send } from 'lucide-vue-next'
 import { useHead } from '@unhead/vue'
+import { localeTags } from '../lib/i18n'
 import { useLocale } from '../lib/useLocale'
 
 interface CommentItem {
@@ -11,7 +12,7 @@ interface CommentItem {
   createdAt: string
 }
 
-const { t } = useLocale()
+const { locale, t } = useLocale()
 const form = reactive({ displayName: '', email: '', content: '', website: '' })
 const comments = ref<CommentItem[]>([])
 const nextCursor = ref<number | null>(null)
@@ -37,14 +38,14 @@ async function submit() {
       body: JSON.stringify(form),
     })
     const body = await response.json().catch(() => ({})) as { detail?: string; displayName?: string }
-    if (!response.ok) throw new Error(body.detail || 'Unable to publish')
+    if (!response.ok) throw new Error(body.detail || t.value.publishFailed)
     form.displayName = ''
     form.email = ''
     form.content = ''
-    status.value = '✓ Published'
+    status.value = t.value.publishedSuccess
     await load(true)
   } catch (error) {
-    status.value = error instanceof Error ? error.message : 'Unable to publish'
+    status.value = error instanceof Error ? error.message : t.value.publishFailed
   } finally {
     submitting.value = false
   }
@@ -58,7 +59,7 @@ useHead(computed(() => ({ title: `${t.value.guestbookTitle} · Fish` })))
   <section class="page-section section-shell guestbook-layout">
     <div>
       <header class="page-heading">
-        <p class="eyebrow">GUESTBOOK</p>
+        <p class="eyebrow">{{ t.guestbookEyebrow }}</p>
         <h1>{{ t.guestbookTitle }}</h1>
         <p>{{ t.guestbookBody }}</p>
       </header>
@@ -95,7 +96,7 @@ useHead(computed(() => ({ title: `${t.value.guestbookTitle} · Fish` })))
         <article v-for="comment in comments" :key="comment.id" class="comment-card glass-panel">
           <div>
             <strong>{{ comment.displayName }}</strong>
-            <time :datetime="comment.createdAt">{{ new Date(comment.createdAt).toLocaleDateString() }}</time>
+            <time :datetime="comment.createdAt">{{ new Date(comment.createdAt).toLocaleDateString(localeTags[locale]) }}</time>
           </div>
           <p>{{ comment.content }}</p>
         </article>
