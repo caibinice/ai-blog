@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import configparser
 import json
+import os
 import secrets
 import subprocess
 import sys
@@ -45,7 +46,11 @@ def load_or_create_json(path: Path, factory) -> dict[str, str]:
     return value
 
 
-def prepare_secrets() -> tuple[dict[str, str], dict[str, str]]:
+def prepare_secrets() -> tuple[
+    dict[str, str],
+    dict[str, str],
+    dict[str, str],
+]:
     blog_admin_path = BLOG_ROOT / ".deploy" / "blog-admin.json"
     quant_admin_path = QUANT_ROOT / ".deploy" / "blog-admin.json"
     source = quant_admin_path if quant_admin_path.exists() else blog_admin_path
@@ -63,7 +68,26 @@ def prepare_secrets() -> tuple[dict[str, str], dict[str, str]]:
             "adminPassword": secrets.token_urlsafe(16),
         },
     )
-    return admin, cross
+    action = load_or_create_json(
+        BLOG_ROOT / ".deploy" / "action-auth.json",
+        lambda: {
+            "password": os.environ.get("AI_PLATFORM_ACTION_PASSWORD", ""),
+            "tokenSecret": secrets.token_urlsafe(48),
+        },
+    )
+    if not action.get("password"):
+        raise RuntimeError(
+            "Set AI_PLATFORM_ACTION_PASSWORD once to create ignored action-auth.json."
+        )
+    cross["adminPassword"] = action["password"]
+    (BLOG_ROOT / ".deploy" / "crossborder-secrets.json").write_text(
+        json.dumps(cross, indent=2),
+        encoding="utf-8",
+    )
+    quant_action = QUANT_ROOT / ".deploy" / "action-auth.json"
+    quant_action.parent.mkdir(parents=True, exist_ok=True)
+    quant_action.write_text(json.dumps(action, indent=2), encoding="utf-8")
+    return admin, cross, action
 
 
 def systemd_env(values: dict[str, str]) -> bytes:
@@ -105,7 +129,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--prepare-only", action="store_true")
     args = parser.parse_args()
-    _, cross_secrets = prepare_secrets()
+    _, cross_secrets, action_auth = prepare_secrets()
     if args.prepare_only:
         print("Local deployment secrets are ready in ignored .deploy directories.")
         return
@@ -160,6 +184,7 @@ def main() -> None:
             "AUTH_ENABLED": "true",
             "JWT_SECRET": cross_secrets["jwtSecret"],
             "INITIAL_ADMIN_PASSWORD": cross_secrets["adminPassword"],
+            "FIXED_ADMIN_PASSWORD": action_auth["password"],
             "CORS_ALLOWED_ORIGINS": "https://101.132.78.217",
             "SOURCE_MODE": "external",
             "AI_ENRICHMENT_ENABLED": "true",
@@ -208,6 +233,9 @@ def main() -> None:
                 "embedding", "dimensions", fallback="1536"
             ),
             "MCP_ENABLED": "false",
+            "ACTION_PASSWORD": action_auth["password"],
+            "ACTION_TOKEN_SECRET": action_auth["tokenSecret"],
+            "ACTION_TOKEN_TTL_MINUTES": "30",
         }
     )
 

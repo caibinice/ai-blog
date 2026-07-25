@@ -33,7 +33,7 @@ I deliberately kept a few boundaries:
 
 - Local embedding is used only for repeatable link verification; production quality still requires a real model.
 - Data source extraction and report tasks still have an MVP nature.
-- The public demo uses Nginx Basic Auth; application-level RBAC, tenant isolation, and auditing are still future work.
+- The public demo exposes read-only screens, while chat, uploads, deletes, and report runs require a short-lived backend action token; application-level RBAC, tenant isolation, and auditing remain future work.
 - Model answers must include citations; fluent expression cannot be treated as a guarantee of fact.
 
 ## Trade-offs on a Small Server
