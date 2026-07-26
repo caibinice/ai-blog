@@ -20,7 +20,7 @@ export const articleMeta: ArticleMeta[] = [
   { slug: 'cross-border-trends', date: '2025-11-22', tags: ['Commerce', 'Data', 'Spring'], projectPath: '/crossBorderTrend/' },
   { slug: 'llm-sentiment-walk-forward', date: '2026-02-14', tags: ['LLM', 'Sentiment', 'Walk-forward'], projectPath: '/quant/' },
   { slug: 'enterprise-ai-cockpit', date: '2026-05-02', tags: ['RAG', 'Spring AI', 'pgvector'], projectPath: '/smartCockpit/' },
-  { slug: 'multi-branch-feature-migration', date: '2026-07-15', tags: ['Git', 'Workflow', 'Deployment'] },
+  { slug: 'multi-branch-feature-migration', date: '2026-07-15', tags: ['Git', 'Cherry-pick', 'Deployment'] },
 ]
 
 const modules = import.meta.glob('../content/**/*.md', {

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 470" width="720" height="470" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <style>
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+      .sub  { fill: #6b7180; font-size: 12px; }
+      .lab  { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12.5px; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="468" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="30" text-anchor="middle" class="sub" font-size="13" fill="#8a90a2">Two-stage flow · 一条路</text>
+
+  <!-- Node A -->
+  <rect x="200" y="48" width="320" height="56" rx="10" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="72" text-anchor="middle" class="code" font-size="16" fill="#2b2f42">prod_factory_a</text>
+  <text x="360" y="92" text-anchor="middle" class="sub">Factory A · deploy branch</text>
+
+  <line x1="360" y1="104" x2="360" y2="156" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="374" y="134" class="lab" fill="#4f6ef7">① cherry-pick -n &#160;(source commits)</text>
+
+  <!-- Filter -->
+  <rect x="170" y="160" width="380" height="56" rx="10" fill="#fff8ec" stroke="#e0a23c" stroke-width="1.5"/>
+  <text x="360" y="184" text-anchor="middle" class="code" font-size="14" fill="#8a5a00">working tree — filter</text>
+  <text x="360" y="204" text-anchor="middle" class="sub">drop factory-specific code, keep the shared feature</text>
+
+  <line x1="360" y1="216" x2="360" y2="268" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Main -->
+  <rect x="200" y="272" width="320" height="56" rx="10" fill="#ffffff" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="360" y="296" text-anchor="middle" class="code" font-size="16" fill="#1f7a4d">prod_main</text>
+  <text x="360" y="316" text-anchor="middle" class="sub">one clean feature commit</text>
+
+  <line x1="360" y1="328" x2="360" y2="380" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="374" y="358" class="lab" fill="#2fa36b">② cherry-pick -x &#160;(record source)</text>
+
+  <!-- Node B -->
+  <rect x="200" y="384" width="320" height="56" rx="10" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="408" text-anchor="middle" class="code" font-size="16" fill="#2b2f42">prod_factory_b</text>
+  <text x="360" y="428" text-anchor="middle" class="sub">Factory B · deploy branch</text>
+</svg>
