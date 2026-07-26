@@ -5,9 +5,9 @@ import { copy, localizedPath, type Locale } from './i18n'
 describe('localized static content', () => {
   const locales: Locale[] = ['zh', 'en', 'ja']
 
-  it.each(locales)('ships all five articles in %s', (locale) => {
+  it.each(locales)('ships all six articles in %s', (locale) => {
     const articles = listArticles(locale)
-    expect(articles).toHaveLength(5)
+    expect(articles).toHaveLength(6)
     expect(articles.map(({ slug }) => slug)).toEqual(articleMeta.map(({ slug }) => slug))
     expect(articles.every(({ title, excerpt, body }) => title && excerpt && body.length > 500)).toBe(true)
   })
