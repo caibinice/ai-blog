@@ -5,6 +5,7 @@ dist/
 .env.*
 !.env.example
 credentials.txt
+docs/todo.md
 *.log
 .playwright-cli/
 .vite-ssg-temp/
