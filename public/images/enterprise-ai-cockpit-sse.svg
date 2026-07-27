@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 470" width="720" height="470" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arSse" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <marker id="arSseGrn" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#2fa36b"/>
+    </marker>
+    <marker id="arSseRed" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#e5534b"/>
+    </marker>
+    <style>
+      .tag  { fill: #8a90a2; font-size: 12px; }
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+      .sub  { fill: #6b7180; font-size: 11px; }
+      .evt  { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12px; fill: #2b2f42; }
+      .cap  { fill: #6b7180; font-size: 12px; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="468" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="30" text-anchor="middle" class="tag">SSE event stream · upstream &#8594; ChatClient &#8594; frontend</text>
+
+  <!-- three lifelines / column headers -->
+  <rect x="40" y="48" width="180" height="46" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="130" y="70" text-anchor="middle" class="code" font-size="13" fill="#2b2f42">upstream</text>
+  <text x="130" y="86" text-anchor="middle" class="sub">OpenAI-compatible / DeepSeek</text>
+
+  <rect x="270" y="48" width="180" height="46" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="70" text-anchor="middle" class="code" font-size="13" fill="#2b2f42">ChatClient</text>
+  <text x="360" y="86" text-anchor="middle" class="sub">Spring WebFlux · Spring AI</text>
+
+  <rect x="500" y="48" width="180" height="46" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="590" y="70" text-anchor="middle" class="code" font-size="13" fill="#2b2f42">frontend</text>
+  <text x="590" y="86" text-anchor="middle" class="sub">Vue · EventSource</text>
+
+  <!-- lifelines -->
+  <line x1="130" y1="94" x2="130" y2="330" stroke="#dde1ee" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <line x1="360" y1="94" x2="360" y2="410" stroke="#dde1ee" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <line x1="590" y1="94" x2="590" y2="410" stroke="#dde1ee" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+  <!-- event: open -->
+  <line x1="140" y1="118" x2="580" y2="118" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arSse)"/>
+  <rect x="300" y="104" width="120" height="22" rx="7" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="119" text-anchor="middle" class="evt">event: open</text>
+
+  <!-- event: token xN -->
+  <line x1="140" y1="158" x2="580" y2="158" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arSse)"/>
+  <rect x="286" y="144" width="148" height="22" rx="7" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="159" text-anchor="middle" class="evt">event: token &#215; N</text>
+  <text x="590" y="152" text-anchor="middle" class="sub">append incrementally</text>
+
+  <!-- event: citation -->
+  <line x1="140" y1="198" x2="580" y2="198" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arSse)"/>
+  <rect x="292" y="184" width="136" height="22" rx="7" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="199" text-anchor="middle" class="evt">event: citation</text>
+  <text x="590" y="192" text-anchor="middle" class="sub">source chunks</text>
+
+  <!-- event: chart -->
+  <line x1="140" y1="238" x2="580" y2="238" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arSse)"/>
+  <rect x="298" y="224" width="124" height="22" rx="7" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="239" text-anchor="middle" class="evt">event: chart</text>
+  <text x="590" y="232" text-anchor="middle" class="sub">ECharts payload</text>
+
+  <!-- event: done (success) -->
+  <line x1="140" y1="278" x2="580" y2="278" stroke="#2fa36b" stroke-width="2" marker-end="url(#arSseGrn)"/>
+  <rect x="300" y="264" width="120" height="22" rx="7" fill="#f1faf4" stroke="#2fa36b"/>
+  <text x="360" y="279" text-anchor="middle" class="evt" fill="#1f7a4d">event: done</text>
+  <text x="590" y="272" text-anchor="middle" class="sub">stream closed cleanly</text>
+
+  <!-- separator note -->
+  <text x="130" y="310" text-anchor="middle" class="sub">every stream MUST terminate</text>
+
+  <!-- error / timeout branch box -->
+  <rect x="270" y="346" width="410" height="48" rx="11" fill="#fdf3f2" stroke="#e5534b" stroke-width="1.5"/>
+  <text x="475" y="368" text-anchor="middle" class="code" font-size="13" fill="#b23b34">event: error / timeout</text>
+  <text x="475" y="384" text-anchor="middle" class="sub">connection drop &#183; upstream timeout &#183; explicit final state</text>
+  <line x1="360" y1="330" x2="360" y2="344" stroke="#e5534b" stroke-width="2" marker-end="url(#arSseRed)"/>
+
+  <text x="360" y="432" text-anchor="middle" class="cap">Nginx: SSE buffering OFF &#8212; otherwise events arrive all at once</text>
+  <text x="360" y="452" text-anchor="middle" class="cap">real upstream stream · early feedback · every stream ends in done or error</text>
+</svg>

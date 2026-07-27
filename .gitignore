@@ -8,6 +8,16 @@ credentials.txt
 docs/todo.md
 *.log
 .playwright-cli/
+
+# Local coding-agent workspace/configuration
+.claude/
+.codex/
+.cursor/
+.continue/
+.windsurf/
+.roo/
+.aider*
+
 .vite-ssg-temp/
 __pycache__/
 *.py[cod]

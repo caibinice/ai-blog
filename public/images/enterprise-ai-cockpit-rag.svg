@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" width="720" height="400" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arRag" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <marker id="arRagGrn" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#2fa36b"/>
+    </marker>
+    <marker id="arRagAmb" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#e0a23c"/>
+    </marker>
+    <style>
+      .tag  { fill: #8a90a2; font-size: 12px; }
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+      .sub  { fill: #6b7180; font-size: 11.5px; }
+      .item { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 11.5px; fill: #2b2f42; }
+      .cap  { fill: #6b7180; font-size: 12px; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="398" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+
+  <text x="114" y="42" text-anchor="middle" class="tag">INDEX PATH</text>
+  <text x="360" y="42" text-anchor="middle" class="tag">SHARED STORES</text>
+  <text x="606" y="42" text-anchor="middle" class="tag">QUERY PATH</text>
+
+  <!-- INDEX column (left) -->
+  <rect x="24" y="56" width="180" height="44" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="114" y="80" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">Document</text>
+  <text x="114" y="94" text-anchor="middle" class="sub">upload</text>
+
+  <line x1="114" y1="100" x2="114" y2="118" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arRag)"/>
+
+  <rect x="24" y="118" width="180" height="44" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="114" y="142" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">Apache Tika</text>
+  <text x="114" y="156" text-anchor="middle" class="sub">extract text</text>
+
+  <line x1="114" y1="162" x2="114" y2="180" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arRag)"/>
+
+  <rect x="24" y="180" width="180" height="44" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="114" y="204" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">chunk</text>
+  <text x="114" y="218" text-anchor="middle" class="sub">split</text>
+
+  <line x1="114" y1="224" x2="114" y2="242" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arRag)"/>
+
+  <rect x="24" y="242" width="180" height="44" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="114" y="266" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">embedding</text>
+  <text x="114" y="280" text-anchor="middle" class="sub">vectorize</text>
+
+  <!-- SHARED STORES (center) -->
+  <rect x="270" y="96" width="180" height="92" rx="12" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="122" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">MySQL</text>
+  <text x="360" y="138" text-anchor="middle" class="sub" font-size="11">business store</text>
+  <line x1="286" y1="145" x2="434" y2="145" stroke="#e2e5ee"/>
+  <text x="360" y="162" text-anchor="middle" class="item">KB · docs · sources</text>
+  <text x="360" y="180" text-anchor="middle" class="item">reports · chats · cfg</text>
+
+  <rect x="270" y="232" width="180" height="92" rx="12" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="360" y="258" text-anchor="middle" class="code" font-size="15" fill="#1f7a4d">pgvector</text>
+  <text x="360" y="274" text-anchor="middle" class="sub" font-size="11">PostgreSQL vector store</text>
+  <line x1="286" y1="281" x2="434" y2="281" stroke="#cdead9"/>
+  <text x="360" y="298" text-anchor="middle" class="item">vectors (fixed dim)</text>
+  <text x="360" y="316" text-anchor="middle" class="item">chunk metadata</text>
+
+  <!-- index write into pgvector -->
+  <line x1="204" y1="264" x2="266" y2="264" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arRag)"/>
+  <text x="235" y="258" text-anchor="middle" class="item" font-size="10.5" fill="#6b7180">write</text>
+
+  <!-- QUERY column (right) -->
+  <rect x="516" y="56" width="180" height="44" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="606" y="80" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">question</text>
+  <text x="606" y="94" text-anchor="middle" class="sub">user</text>
+
+  <line x1="606" y1="100" x2="606" y2="118" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arRag)"/>
+
+  <rect x="516" y="118" width="180" height="44" rx="11" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="606" y="142" text-anchor="middle" class="code" font-size="15" fill="#1f7a4d">retrieve</text>
+  <text x="606" y="156" text-anchor="middle" class="sub">pgvector cosine</text>
+
+  <line x1="606" y1="162" x2="606" y2="180" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arRag)"/>
+
+  <rect x="516" y="180" width="180" height="44" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="606" y="204" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">ChatClient</text>
+  <text x="606" y="218" text-anchor="middle" class="sub">Spring AI · upstream SSE</text>
+
+  <line x1="606" y1="224" x2="606" y2="242" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arRag)"/>
+
+  <rect x="516" y="242" width="180" height="44" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="606" y="266" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">SSE stream</text>
+  <text x="606" y="280" text-anchor="middle" class="sub">token · citation · chart</text>
+
+  <line x1="606" y1="286" x2="606" y2="304" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arRag)"/>
+
+  <rect x="516" y="304" width="180" height="44" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="606" y="328" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">Vue</text>
+  <text x="606" y="342" text-anchor="middle" class="sub">frontend</text>
+
+  <!-- query read (cosine) from pgvector -->
+  <path d="M598,162 C560,205 500,218 434,232" fill="none" stroke="#2fa36b" stroke-width="2" marker-end="url(#arRagGrn)"/>
+  <text x="466" y="206" class="item" font-size="11" fill="#1f7a4d">cosine</text>
+
+  <!-- query fallback to MySQL -->
+  <line x1="516" y1="132" x2="454" y2="132" stroke="#e0a23c" stroke-width="2" marker-end="url(#arRagAmb)"/>
+  <text x="484" y="126" text-anchor="middle" class="item" font-size="10" fill="#c8892b">fallback</text>
+  <text x="484" y="147" text-anchor="middle" class="sub" font-size="9">keyword · CJK</text>
+
+  <text x="360" y="378" text-anchor="middle" class="cap">real upstream streaming · retrieval fallback · dual-DB separation of duties</text>
+</svg>

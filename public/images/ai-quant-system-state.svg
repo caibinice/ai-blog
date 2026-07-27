@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" width="720" height="440" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arState" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <marker id="arStateRetry" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#e5534b"/>
+    </marker>
+    <style>
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+      .sub  { fill: #6b7180; font-size: 11.5px; }
+      .lab  { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12px; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="438" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="32" text-anchor="middle" font-size="13" fill="#8a90a2">Research task state machine &#183; persisted in MySQL</text>
+
+  <!-- queued -->
+  <rect x="285" y="56" width="150" height="56" rx="11" fill="#fff8ec" stroke="#e0a23c" stroke-width="1.5"/>
+  <text x="360" y="86" text-anchor="middle" class="code" font-size="15" fill="#8a5a00">queued</text>
+  <text x="360" y="103" text-anchor="middle" class="sub">API writes on submit</text>
+
+  <line x1="360" y1="112" x2="360" y2="136" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arState)"/>
+
+  <!-- running -->
+  <rect x="285" y="138" width="150" height="56" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="168" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">running</text>
+  <text x="360" y="185" text-anchor="middle" class="sub">worker claims &amp; runs</text>
+
+  <!-- split to success / failed -->
+  <path d="M360,194 C300,216 248,226 216,244" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arState)"/>
+  <path d="M360,194 C420,216 472,226 504,244" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arState)"/>
+
+  <!-- success -->
+  <rect x="120" y="246" width="170" height="56" rx="11" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="205" y="276" text-anchor="middle" class="code" font-size="14" fill="#1f7a4d">success &#10003;</text>
+  <text x="205" y="293" text-anchor="middle" class="sub">structured result</text>
+
+  <!-- failed -->
+  <rect x="430" y="246" width="170" height="56" rx="11" fill="#fdf3f2" stroke="#e5534b" stroke-width="1.5"/>
+  <text x="515" y="276" text-anchor="middle" class="code" font-size="14" fill="#b23b34">failed &#10007;</text>
+  <text x="515" y="293" text-anchor="middle" class="sub">readable error logged</text>
+
+  <!-- success -> persisted -->
+  <line x1="205" y1="302" x2="205" y2="334" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arState)"/>
+
+  <!-- persisted -->
+  <rect x="120" y="336" width="170" height="60" rx="11" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="205" y="366" text-anchor="middle" class="code" font-size="14" fill="#1f7a4d">persisted</text>
+  <text x="205" y="384" text-anchor="middle" class="sub">row kept in MySQL</text>
+
+  <!-- retry loop: failed -> queued -->
+  <path d="M600,262 C686,236 686,96 435,84" fill="none" stroke="#e5534b" stroke-width="1.6" marker-end="url(#arStateRetry)"/>
+  <text x="678" y="176" text-anchor="middle" class="lab" fill="#b23b34" transform="rotate(90,678,176)">retry &#8594; queued</text>
+
+  <!-- restart note -->
+  <text x="360" y="424" text-anchor="middle" class="sub" font-size="12">state lives in the DB, not in memory &#183; survives worker or process restart</text>
+</svg>

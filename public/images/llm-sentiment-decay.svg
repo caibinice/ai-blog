@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 430" width="720" height="430" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arLsd" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <marker id="arLsdGrn" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#2fa36b"/>
+    </marker>
+    <style>
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+      .sub  { fill: #6b7180; font-size: 11.5px; }
+      .axis { fill: #8a90a2; font-size: 11px; font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="428" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="30" text-anchor="middle" class="sub" font-size="13" fill="#8a90a2">sentiment time-decay &#183; one event &#8800; many signals</text>
+
+  <!-- ===== LEFT: decay chart ===== -->
+  <text x="70" y="60" class="code" font-size="12.5" fill="#4f6ef7">weight w(t) = exp(-&#955;t)</text>
+  <text x="70" y="76" class="sub" font-size="10.5" fill="#8a90a2">example curve &#183; illustrative</text>
+
+  <!-- axes -->
+  <line x1="80" y1="86" x2="80" y2="300" stroke="#c3c8d6" stroke-width="1.5"/>
+  <line x1="80" y1="300" x2="440" y2="300" stroke="#c3c8d6" stroke-width="1.5"/>
+
+  <!-- y ticks -->
+  <text x="72" y="94" text-anchor="end" class="axis">1.0</text>
+  <line x1="76" y1="90" x2="80" y2="90" stroke="#c3c8d6"/>
+  <text x="72" y="209" text-anchor="end" class="axis">0.5</text>
+  <line x1="76" y1="205" x2="80" y2="205" stroke="#c3c8d6"/>
+  <line x1="80" y1="90" x2="440" y2="90" stroke="#eceef4"/>
+  <line x1="80" y1="205" x2="440" y2="205" stroke="#eceef4"/>
+
+  <!-- x ticks: day 0 / 7 / 14 -->
+  <line x1="80" y1="300" x2="80" y2="304" stroke="#c3c8d6"/>
+  <text x="80" y="317" text-anchor="middle" class="axis">day 0</text>
+  <line x1="255" y1="300" x2="255" y2="304" stroke="#c3c8d6"/>
+  <text x="255" y="317" text-anchor="middle" class="axis">day 7</text>
+  <line x1="430" y1="300" x2="430" y2="304" stroke="#c3c8d6"/>
+  <text x="430" y="317" text-anchor="middle" class="axis">day 14</text>
+
+  <!-- decay curve -->
+  <path d="M80,90 L105,132 L130,166 L155,194 L180,217 L205,235 L230,251 L255,263 L280,274 L305,282 L330,289 L380,299 L430,306"
+        fill="none" stroke="#4f6ef7" stroke-width="2.5"/>
+
+  <!-- day 0 point: fresh -->
+  <circle cx="80" cy="90" r="4.5" fill="#2fa36b"/>
+  <rect x="92" y="96" width="150" height="34" rx="8" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.3"/>
+  <text x="167" y="110" text-anchor="middle" class="code" font-size="11" fill="#1f7a4d">fresh announcement</text>
+  <text x="167" y="124" text-anchor="middle" class="sub" font-size="10.5">w = 1.0</text>
+
+  <!-- day 7 point: stale -->
+  <circle cx="255" cy="263" r="4.5" fill="#e0a23c"/>
+  <rect x="268" y="240" width="150" height="34" rx="8" fill="#fff8ec" stroke="#e0a23c" stroke-width="1.3"/>
+  <text x="343" y="254" text-anchor="middle" class="code" font-size="11" fill="#8a5a00">7-day-old news</text>
+  <text x="343" y="268" text-anchor="middle" class="sub" font-size="10.5">w &#8776; 0.25 &#183; not equal weight</text>
+
+  <text x="150" y="345" class="sub" font-size="11" fill="#6b7180">older evidence should weigh less than</text>
+  <text x="150" y="361" class="sub" font-size="11" fill="#6b7180">a just-released filing on the same name</text>
+
+  <!-- ===== RIGHT: dedup / aggregation ===== -->
+  <rect x="470" y="86" width="230" height="286" rx="12" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="585" y="110" text-anchor="middle" class="code" font-size="13" fill="#4f6ef7">dedup &#183; event aggregation</text>
+  <line x1="486" y1="122" x2="684" y2="122" stroke="#dde1ee"/>
+
+  <!-- three reports -->
+  <rect x="490" y="134" width="190" height="30" rx="8" fill="#ffffff" stroke="#9aa0b4" stroke-width="1.3"/>
+  <text x="585" y="153" text-anchor="middle" class="code" font-size="11" fill="#6b7180">report_1 &#183; hash a1</text>
+  <rect x="490" y="170" width="190" height="30" rx="8" fill="#ffffff" stroke="#9aa0b4" stroke-width="1.3"/>
+  <text x="585" y="189" text-anchor="middle" class="code" font-size="11" fill="#6b7180">report_2 &#183; re-post</text>
+  <rect x="490" y="206" width="190" height="30" rx="8" fill="#ffffff" stroke="#9aa0b4" stroke-width="1.3"/>
+  <text x="585" y="225" text-anchor="middle" class="code" font-size="11" fill="#6b7180">report_3 &#183; syndicated</text>
+  <text x="585" y="252" text-anchor="middle" class="sub" font-size="10.5" fill="#8a90a2">same event, different outlets</text>
+
+  <line x1="585" y1="258" x2="585" y2="284" stroke="#2fa36b" stroke-width="2" marker-end="url(#arLsdGrn)"/>
+
+  <!-- merged event -->
+  <rect x="500" y="288" width="170" height="60" rx="10" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="585" y="310" text-anchor="middle" class="code" font-size="12.5" fill="#1f7a4d">1 event</text>
+  <text x="585" y="328" text-anchor="middle" class="sub" font-size="10.5">counted once, not 3 signals</text>
+  <text x="585" y="342" text-anchor="middle" class="sub" font-size="10.5">then decayed by event-time</text>
+
+  <text x="360" y="398" text-anchor="middle" class="sub" font-size="11" fill="#8a90a2">decay by age &#183; dedup by content hash &#183; aggregate per stock</text>
+</svg>

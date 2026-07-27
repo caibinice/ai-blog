@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 500" width="720" height="500" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arCbt" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <style>
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+      .sub  { fill: #6b7180; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="498" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="30" text-anchor="middle" class="sub" font-size="13" fill="#8a90a2">From many sources to one traceable daily report</text>
+
+  <!-- Source boxes -->
+  <rect x="58" y="46" width="182" height="48" rx="10" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="149" y="70" text-anchor="middle" class="code" font-size="14" fill="#2b2f42">Google Trends</text>
+  <text x="149" y="86" text-anchor="middle" class="sub" font-size="12">RSS feed</text>
+
+  <rect x="269" y="46" width="182" height="48" rx="10" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="70" text-anchor="middle" class="code" font-size="14" fill="#2b2f42">WooCommerce</text>
+  <text x="360" y="86" text-anchor="middle" class="sub" font-size="12">product catalog</text>
+
+  <rect x="480" y="46" width="182" height="48" rx="10" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="571" y="70" text-anchor="middle" class="code" font-size="14" fill="#2b2f42">Frankfurter</text>
+  <text x="571" y="86" text-anchor="middle" class="sub" font-size="12">FX rates</text>
+
+  <text x="360" y="114" text-anchor="middle" class="sub" font-size="12">+ optional by credentials: Rakuten &#183; Yahoo &#183; Rainforest</text>
+
+  <!-- converge into Collect -->
+  <path d="M149,94 C149,118 236,110 258,132" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arCbt)"/>
+  <line x1="360" y1="94" x2="360" y2="130" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arCbt)"/>
+  <path d="M571,94 C571,118 484,110 462,132" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arCbt)"/>
+
+  <!-- Collect -->
+  <rect x="140" y="132" width="440" height="70" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="158" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">Collect</text>
+  <text x="360" y="178" text-anchor="middle" class="sub" font-size="12">keep source link &#183; title &#183; image</text>
+  <text x="360" y="195" text-anchor="middle" class="sub" font-size="12">market &#183; currency &#183; fetch time</text>
+
+  <line x1="360" y1="202" x2="360" y2="228" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arCbt)"/>
+
+  <!-- AI standardize -->
+  <rect x="220" y="230" width="280" height="58" rx="11" fill="#fff8ec" stroke="#e0a23c" stroke-width="1.5"/>
+  <text x="360" y="256" text-anchor="middle" class="code" font-size="15" fill="#8a5a00">AI standardize</text>
+  <text x="360" y="275" text-anchor="middle" class="sub" font-size="11.5">DeepSeek: title / category / rank</text>
+
+  <!-- fallback offshoot -->
+  <text x="509" y="250" text-anchor="middle" class="sub" font-size="10.5">if down</text>
+  <line x1="500" y1="259" x2="516" y2="259" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arCbt)"/>
+  <rect x="518" y="241" width="165" height="40" rx="10" fill="#ffffff" stroke="#e0a23c" stroke-width="1.5"/>
+  <text x="600" y="259" text-anchor="middle" class="code" font-size="13" fill="#8a5a00">fallback</text>
+  <text x="600" y="274" text-anchor="middle" class="sub" font-size="11">rule-based</text>
+
+  <line x1="360" y1="288" x2="360" y2="314" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arCbt)"/>
+
+  <!-- Profit model -->
+  <rect x="140" y="316" width="440" height="70" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="342" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">Profit model</text>
+  <text x="360" y="362" text-anchor="middle" class="sub" font-size="12">buy cost + FX + shipping</text>
+  <text x="360" y="379" text-anchor="middle" class="sub" font-size="12">+ platform / pay / tax / ad fees</text>
+
+  <line x1="360" y1="386" x2="360" y2="412" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arCbt)"/>
+
+  <!-- Daily report -->
+  <rect x="200" y="414" width="320" height="60" rx="11" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="360" y="440" text-anchor="middle" class="code" font-size="16" fill="#1f7a4d">Daily report</text>
+  <text x="360" y="460" text-anchor="middle" class="sub" font-size="12">traceable &#183; rerun every day</text>
+</svg>

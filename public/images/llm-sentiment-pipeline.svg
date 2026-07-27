@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 430" width="720" height="430" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arLsp" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <style>
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+      .sub  { fill: #6b7180; font-size: 12px; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="428" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="28" text-anchor="middle" class="sub" font-size="13" fill="#8a90a2">text  &#8594;  auditable factor  &#8594;  out-of-sample</text>
+
+  <!-- LEFT: pipeline -->
+  <!-- A: news / filing -->
+  <rect x="28" y="52" width="300" height="56" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="178" y="78" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">news / filing</text>
+  <text x="178" y="96" text-anchor="middle" class="sub">store raw &#183; source &#183; time &#183; hash</text>
+
+  <line x1="178" y1="108" x2="178" y2="136" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arLsp)"/>
+
+  <!-- B: LLM extract -->
+  <rect x="28" y="138" width="300" height="90" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="178" y="161" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">LLM extract</text>
+  <text x="178" y="181" text-anchor="middle" class="sub">label &#183; score &#183; confidence</text>
+  <text x="178" y="199" text-anchor="middle" class="sub">summary &#183; reason</text>
+  <text x="178" y="219" text-anchor="middle" class="code" font-size="12" fill="#2fa36b">derived &#183; does NOT overwrite raw</text>
+
+  <line x1="178" y1="228" x2="178" y2="252" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arLsp)"/>
+
+  <!-- C: time-decay window -->
+  <rect x="28" y="254" width="300" height="56" rx="11" fill="#fff8ec" stroke="#e0a23c" stroke-width="1.5"/>
+  <text x="178" y="280" text-anchor="middle" class="code" font-size="15" fill="#8a5a00">time-decay window</text>
+  <text x="178" y="298" text-anchor="middle" class="sub">event-time &#183; decays with age</text>
+
+  <line x1="178" y1="310" x2="178" y2="334" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arLsp)"/>
+
+  <!-- D: aggregate -->
+  <rect x="28" y="336" width="300" height="56" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="178" y="362" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">aggregate / stock</text>
+  <text x="178" y="380" text-anchor="middle" class="sub">one sentiment score per stock</text>
+
+  <!-- connector: pipeline feeds the sentiment variant -->
+  <path d="M328,364 C356,356 372,300 404,286" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arLsp)"/>
+  <text x="360" y="318" text-anchor="middle" class="code" font-size="11.5" fill="#2fa36b">sentiment</text>
+
+  <!-- RIGHT: walk-forward backtest panel -->
+  <rect x="384" y="96" width="308" height="300" rx="12" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="538" y="124" text-anchor="middle" class="code" font-size="14" fill="#4f6ef7">walk-forward backtest</text>
+  <text x="538" y="142" text-anchor="middle" class="sub">same pool &#183; cost &#183; window</text>
+  <line x1="404" y1="154" x2="672" y2="154" stroke="#dde1ee"/>
+
+  <!-- baseline (no AI) -->
+  <rect x="404" y="168" width="268" height="62" rx="10" fill="#ffffff" stroke="#9aa0b4" stroke-width="1.5"/>
+  <text x="538" y="193" text-anchor="middle" class="code" font-size="14" fill="#6b7180">baseline &#183; no AI</text>
+  <text x="538" y="212" text-anchor="middle" class="sub">price + fundamental factors</text>
+
+  <line x1="538" y1="232" x2="538" y2="252" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arLsp)"/>
+
+  <!-- + sentiment (AI) -->
+  <rect x="404" y="254" width="268" height="62" rx="10" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="538" y="279" text-anchor="middle" class="code" font-size="14" fill="#1f7a4d">+ sentiment &#183; AI</text>
+  <text x="538" y="298" text-anchor="middle" class="sub">baseline + sentiment factor</text>
+
+  <!-- result -->
+  <text x="538" y="346" text-anchor="middle" class="code" font-size="13" fill="#2b2f42">out-of-sample result</text>
+  <text x="538" y="366" text-anchor="middle" class="sub">return &#183; drawdown &#183; turnover &#183; cost</text>
+</svg>

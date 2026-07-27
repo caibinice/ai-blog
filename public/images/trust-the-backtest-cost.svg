@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" width="720" height="360" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arCost" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <style>
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+      .sub  { fill: #6b7180; font-size: 11.5px; }
+      .lab  { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12.5px; fill: #2b2f42; }
+      .cap  { fill: #6b7180; font-size: 12px; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="358" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="32" text-anchor="middle" class="sub" font-size="13" fill="#8a90a2">Cost sensitivity ladder &#183; same strategy, three assumptions</text>
+
+  <!-- Card 1: base cost -->
+  <rect x="30" y="52" width="200" height="230" rx="12" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="46" y="82" class="code" font-size="15" fill="#2b2f42">base cost</text>
+  <text x="46" y="100" class="sub">reference run</text>
+  <line x1="46" y1="112" x2="214" y2="112" stroke="#e2e5ee"/>
+  <text x="46" y="142" class="lab">return</text>
+  <text x="214" y="142" text-anchor="end" class="lab" fill="#4f6ef7">= ref</text>
+  <text x="46" y="186" class="lab">max dd</text>
+  <text x="214" y="186" text-anchor="end" class="lab" fill="#4f6ef7">= ref</text>
+  <text x="46" y="230" class="lab">turnover</text>
+  <text x="214" y="230" text-anchor="end" class="lab" fill="#4f6ef7">high</text>
+  <text x="46" y="264" class="sub">friction at baseline</text>
+
+  <!-- arrow 1 -> 2 -->
+  <line x1="232" y1="167" x2="258" y2="167" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arCost)"/>
+
+  <!-- Card 2: 2x cost -->
+  <rect x="260" y="52" width="200" height="230" rx="12" fill="#fdf3f2" stroke="#e5534b" stroke-width="1.5"/>
+  <text x="276" y="82" class="code" font-size="15" fill="#b23b34">2x cost</text>
+  <text x="276" y="100" class="sub">friction doubled</text>
+  <line x1="276" y1="112" x2="444" y2="112" stroke="#f6d4d1"/>
+  <text x="276" y="142" class="lab">return</text>
+  <text x="444" y="142" text-anchor="end" class="lab" fill="#b23b34">&#9660; lower</text>
+  <text x="276" y="186" class="lab">max dd</text>
+  <text x="444" y="186" text-anchor="end" class="lab" fill="#b23b34">&#9650; deeper</text>
+  <text x="276" y="230" class="lab">turnover</text>
+  <text x="444" y="230" text-anchor="end" class="lab" fill="#6b7180">unchanged</text>
+  <text x="276" y="264" class="sub">net edge erodes</text>
+
+  <!-- arrow 2 -> 3 -->
+  <line x1="462" y1="167" x2="488" y2="167" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arCost)"/>
+
+  <!-- Card 3: lower turnover -->
+  <rect x="490" y="52" width="200" height="230" rx="12" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="506" y="82" class="code" font-size="15" fill="#1f7a4d">lower turnover</text>
+  <text x="506" y="100" class="sub">rebalance less often</text>
+  <line x1="506" y1="112" x2="674" y2="112" stroke="#cdead9"/>
+  <text x="506" y="142" class="lab">return</text>
+  <text x="674" y="142" text-anchor="end" class="lab" fill="#1f7a4d">&#9650; recovers</text>
+  <text x="506" y="186" class="lab">max dd</text>
+  <text x="674" y="186" text-anchor="end" class="lab" fill="#1f7a4d">&#9660; eased</text>
+  <text x="506" y="230" class="lab">turnover</text>
+  <text x="674" y="230" text-anchor="end" class="lab" fill="#1f7a4d">&#9660; reduced</text>
+  <text x="506" y="264" class="sub">cost drag cut</text>
+
+  <line x1="30" y1="306" x2="690" y2="306" stroke="#e2e5ee"/>
+  <text x="360" y="332" text-anchor="middle" class="cap">survives only near zero cost &#8594; decoration, not a hypothesis worth pursuing</text>
+</svg>

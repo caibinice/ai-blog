@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" width="720" height="440" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arT" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <style>
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; }
+      .sub  { fill: #6b7180; font-size: 12px; }
+      .item { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 13px; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="438" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="30" text-anchor="middle" class="sub" font-size="13" fill="#8a90a2">Same-day signal · look-ahead trap</text>
+
+  <!-- top node: signal known only after close -->
+  <rect x="210" y="48" width="300" height="56" rx="10" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="72" text-anchor="middle" class="code" font-weight="700" font-size="16" fill="#2b2f42">signal(T)</text>
+  <text x="360" y="92" text-anchor="middle" class="sub">known only after Day T close</text>
+
+  <!-- branches -->
+  <path d="M300,104 C232,124 196,120 195,146" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arT)"/>
+  <path d="M420,104 C488,124 525,120 525,146" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arT)"/>
+
+  <!-- WRONG box -->
+  <rect x="40" y="150" width="310" height="150" rx="12" fill="#fdf3f2" stroke="#e5534b" stroke-width="1.5"/>
+  <text x="60" y="182" class="code" font-weight="700" font-size="16" fill="#b23b34">&#10007; Wrong</text>
+  <line x1="60" y1="196" x2="330" y2="196" stroke="#f6d4d1"/>
+  <text x="60" y="226" class="item" fill="#2b2f42">signal(T) &#215; return(T)</text>
+  <text x="60" y="252" class="sub">peeks at today's move</text>
+  <text x="60" y="284" class="item" font-size="12.5" fill="#b23b34">= look-ahead bias</text>
+
+  <!-- RIGHT box -->
+  <rect x="370" y="150" width="310" height="150" rx="12" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="390" y="182" class="code" font-weight="700" font-size="16" fill="#1f7a4d">&#10003; Right</text>
+  <line x1="390" y1="196" x2="660" y2="196" stroke="#cdead9"/>
+  <text x="390" y="226" class="item" font-weight="700" font-size="15" fill="#1f7a4d">shift(1)</text>
+  <text x="390" y="252" class="item" fill="#2b2f42">signal(T) &#215; return(T+1)</text>
+  <text x="390" y="284" class="sub">position &#8594; T+1 · next period only</text>
+
+  <!-- divider -->
+  <line x1="40" y1="322" x2="680" y2="322" stroke="#e2e5ee"/>
+  <text x="360" y="344" text-anchor="middle" class="sub" font-size="13" fill="#8a90a2">Walk-forward · train, then test once</text>
+
+  <!-- wf box 1: train -->
+  <rect x="60" y="360" width="170" height="52" rx="10" fill="#fff8ec" stroke="#e0a23c" stroke-width="1.5"/>
+  <text x="145" y="384" text-anchor="middle" class="code" font-weight="700" font-size="14" fill="#8a5a00">train</text>
+  <text x="145" y="401" text-anchor="middle" class="sub">pick params</text>
+
+  <line x1="232" y1="386" x2="271" y2="386" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arT)"/>
+
+  <!-- wf box 2: lock -->
+  <rect x="275" y="360" width="170" height="52" rx="10" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="360" y="384" text-anchor="middle" class="code" font-weight="700" font-size="14" fill="#2b2f42">lock</text>
+  <text x="360" y="401" text-anchor="middle" class="sub">freeze params</text>
+
+  <line x1="447" y1="386" x2="486" y2="386" stroke="#9aa0b4" stroke-width="2" marker-end="url(#arT)"/>
+
+  <!-- wf box 3: test once -->
+  <rect x="490" y="360" width="170" height="52" rx="10" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="575" y="384" text-anchor="middle" class="code" font-weight="700" font-size="14" fill="#1f7a4d">test once</text>
+  <text x="575" y="401" text-anchor="middle" class="sub">run it once</text>
+</svg>

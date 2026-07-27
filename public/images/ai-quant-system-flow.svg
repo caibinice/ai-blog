@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 480" width="720" height="480" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="aqflow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0b4"/>
+    </marker>
+    <marker id="aqretry" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#e5534b"/>
+    </marker>
+    <style>
+      .code { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-weight: 700; }
+      .sub  { fill: #6b7180; font-size: 12px; }
+      .lab  { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12px; }
+      .lab2 { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12.5px; }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="718" height="478" rx="14" fill="#f7f8fb" stroke="#e2e5ee"/>
+  <text x="360" y="30" text-anchor="middle" font-size="13" fill="#8a90a2">Research task &#183; data flow &amp; lifecycle</text>
+
+  <!-- region divider -->
+  <line x1="406" y1="52" x2="406" y2="452" stroke="#e6e8f0" stroke-width="1.5" stroke-dasharray="4 5"/>
+
+  <!-- ==== main vertical flow ==== -->
+
+  <!-- Frontend -->
+  <rect x="40" y="48" width="350" height="56" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="215" y="74" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">Frontend &#183; React / Vite</text>
+  <text x="215" y="93" text-anchor="middle" class="sub">submit research params &#183; view results</text>
+
+  <line x1="215" y1="104" x2="215" y2="130" stroke="#9aa0b4" stroke-width="2" marker-end="url(#aqflow)"/>
+  <text x="228" y="121" class="lab" fill="#6b7180">submit</text>
+
+  <!-- FastAPI -->
+  <rect x="40" y="130" width="350" height="56" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="215" y="156" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">FastAPI &#183; thin API</text>
+  <text x="215" y="175" text-anchor="middle" class="sub">writes task = queued</text>
+
+  <line x1="215" y1="186" x2="215" y2="212" stroke="#9aa0b4" stroke-width="2" marker-end="url(#aqflow)"/>
+  <text x="228" y="203" class="lab" fill="#6b7180">worker claims</text>
+
+  <!-- Worker -->
+  <rect x="40" y="212" width="350" height="56" rx="11" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="215" y="238" text-anchor="middle" class="code" font-size="15" fill="#2b2f42">single Worker</text>
+  <text x="215" y="257" text-anchor="middle" class="sub">serial &#183; one task at a time &#183; running</text>
+
+  <line x1="215" y1="268" x2="215" y2="294" stroke="#9aa0b4" stroke-width="2" marker-end="url(#aqflow)"/>
+  <text x="228" y="285" class="lab" fill="#6b7180">run serially</text>
+
+  <!-- Steps -->
+  <rect x="40" y="294" width="350" height="60" rx="11" fill="#fff8ec" stroke="#e0a23c" stroke-width="1.5"/>
+  <text x="215" y="320" text-anchor="middle" class="code" font-size="14" fill="#8a5a00">data sync &#183; sentiment &#183; backtest</text>
+  <text x="215" y="340" text-anchor="middle" class="sub">each step writes progress back</text>
+
+  <line x1="215" y1="354" x2="215" y2="380" stroke="#9aa0b4" stroke-width="2" marker-end="url(#aqflow)"/>
+  <text x="228" y="371" class="lab" fill="#6b7180">persist</text>
+
+  <!-- MySQL -->
+  <rect x="40" y="380" width="350" height="76" rx="11" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="215" y="406" text-anchor="middle" class="code" font-size="15" fill="#1f7a4d">MySQL</text>
+  <text x="215" y="426" text-anchor="middle" class="sub">results &#183; task state &#183; data version</text>
+  <text x="215" y="443" text-anchor="middle" class="sub">learning progress &#183; survives restart</text>
+
+  <!-- ==== task state rail ==== -->
+  <text x="555" y="44" text-anchor="middle" font-size="12" fill="#8a90a2">task lifecycle</text>
+
+  <!-- queued -->
+  <rect x="450" y="58" width="210" height="42" rx="10" fill="#fff8ec" stroke="#e0a23c" stroke-width="1.5"/>
+  <text x="555" y="84" text-anchor="middle" class="code" font-size="14" fill="#8a5a00">queued</text>
+
+  <line x1="555" y1="100" x2="555" y2="120" stroke="#9aa0b4" stroke-width="2" marker-end="url(#aqflow)"/>
+
+  <!-- running -->
+  <rect x="450" y="120" width="210" height="42" rx="10" fill="#ffffff" stroke="#4f6ef7" stroke-width="1.5"/>
+  <text x="555" y="146" text-anchor="middle" class="code" font-size="14" fill="#2b2f42">running</text>
+
+  <!-- split to success / failed -->
+  <path d="M555,162 C520,172 505,177 500,186" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#aqflow)"/>
+  <path d="M555,162 C590,172 605,177 610,186" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#aqflow)"/>
+
+  <rect x="450" y="186" width="100" height="42" rx="10" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="500" y="212" text-anchor="middle" class="code" font-size="13" fill="#1f7a4d">success &#10003;</text>
+
+  <rect x="560" y="186" width="100" height="42" rx="10" fill="#fdf3f2" stroke="#e5534b" stroke-width="1.5"/>
+  <text x="610" y="212" text-anchor="middle" class="code" font-size="13" fill="#b23b34">failed &#10007;</text>
+
+  <!-- success -> persisted -->
+  <path d="M500,228 C500,252 506,263 520,272" fill="none" stroke="#9aa0b4" stroke-width="2" marker-end="url(#aqflow)"/>
+
+  <rect x="450" y="272" width="210" height="52" rx="10" fill="#f1faf4" stroke="#2fa36b" stroke-width="1.5"/>
+  <text x="555" y="296" text-anchor="middle" class="code" font-size="14" fill="#1f7a4d">persisted</text>
+  <text x="555" y="314" text-anchor="middle" class="sub">state survives restart</text>
+
+  <!-- failed -> retry loop -->
+  <path d="M660,207 C702,190 702,96 660,79" fill="none" stroke="#e5534b" stroke-width="1.6" marker-end="url(#aqretry)"/>
+  <text x="698" y="143" text-anchor="middle" class="lab" fill="#b23b34" transform="rotate(90,698,143)">retry</text>
+
+  <!-- design guarantees -->
+  <text x="440" y="360" font-size="12" fill="#8a90a2">design guarantees</text>
+  <text x="440" y="386" class="lab2" fill="#2b2f42"><tspan fill="#2fa36b">&#10003; </tspan>single Worker, serial</text>
+  <text x="440" y="410" class="lab2" fill="#2b2f42"><tspan fill="#2fa36b">&#10003; </tspan>state is persistent</text>
+  <text x="440" y="434" class="lab2" fill="#2b2f42"><tspan fill="#2fa36b">&#10003; </tspan>failed tasks retryable</text>
+</svg>
