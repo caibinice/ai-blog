@@ -328,9 +328,15 @@ img {
   align-items: center;
   gap: 0.45rem;
   color: var(--accent);
-  font-size: 0.74rem;
+  font-size: clamp(0.88rem, 1.05vw, 1rem);
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.13em;
+}
+
+.eyebrow svg {
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
 }
 
 .hero h1 {
@@ -1113,7 +1119,7 @@ img {
   gap: 1rem;
   color: var(--muted);
   border-top: 1px solid var(--line);
-  font-size: 0.82rem;
+  font-size: 0.88rem;
 }
 
 .site-footer > div,
@@ -1129,6 +1135,50 @@ img {
 
 .footer-links a:hover {
   color: var(--accent);
+}
+
+.back-to-top {
+  position: fixed;
+  z-index: 90;
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  padding: 0;
+  place-items: center;
+  color: white;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, white 28%, transparent);
+  border-radius: 1.05rem;
+  background: linear-gradient(140deg, var(--accent), var(--secondary));
+  box-shadow: 0 16px 38px color-mix(in srgb, var(--accent) 32%, transparent);
+  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 240ms ease;
+}
+
+.back-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 44px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.back-to-top:active {
+  transform: translateY(0) scale(0.94);
+}
+
+.back-to-top:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  outline-offset: 3px;
+}
+
+.back-to-top-enter-active,
+.back-to-top-leave-active {
+  transition: opacity 180ms ease, transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.back-to-top-enter-from,
+.back-to-top-leave-to {
+  opacity: 0;
+  transform: translateY(0.8rem) scale(0.82);
 }
 
 .page-enter-active,
@@ -1264,6 +1314,11 @@ img {
     height: 2.5rem;
   }
 
+  .eyebrow {
+    font-size: 0.88rem;
+    letter-spacing: 0.1em;
+  }
+
   .hero {
     padding-block: 5.5rem 3rem;
   }
@@ -1335,6 +1390,14 @@ img {
   .site-footer > div {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .back-to-top {
+    right: max(0.85rem, env(safe-area-inset-right));
+    bottom: max(0.85rem, env(safe-area-inset-bottom));
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.95rem;
   }
 }
 

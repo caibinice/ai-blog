@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BackToTop from './components/BackToTop.vue'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import { useLocale } from './lib/useLocale'
@@ -17,6 +18,7 @@ const { t } = useLocale()
         </Transition>
       </RouterView>
     </main>
+    <BackToTop />
     <SiteFooter />
   </div>
 </template>
