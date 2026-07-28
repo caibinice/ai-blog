@@ -861,6 +861,70 @@ img {
   background: transparent;
 }
 
+.article-table-wrap {
+  width: 100%;
+  margin: 2rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--bg-solid) 72%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--text) 6%, transparent);
+  scrollbar-color: color-mix(in srgb, var(--accent) 42%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.article-table-wrap:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  outline-offset: 3px;
+}
+
+.article-prose table {
+  width: 100%;
+  min-width: 38rem;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.article-prose th,
+.article-prose td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-prose th:not(:last-child),
+.article-prose td:not(:last-child) {
+  border-right: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
+}
+
+.article-prose th {
+  color: var(--text);
+  background: var(--accent-soft);
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.article-prose tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--accent-soft) 42%, transparent);
+}
+
+.article-prose tbody tr:hover {
+  background: color-mix(in srgb, var(--accent-soft) 72%, transparent);
+}
+
+.article-prose tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.article-prose tbody td:first-child {
+  color: var(--text);
+  font-weight: 650;
+}
+
 .project-cta {
   display: flex;
   margin-top: 1rem;
@@ -876,6 +940,96 @@ img {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.8rem;
+}
+
+.news-controls {
+  display: flex;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.15rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  border-radius: var(--radius-lg);
+}
+
+.news-source-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.news-source-filter select {
+  min-width: 13rem;
+  padding: 0.68rem 2.2rem 0.68rem 0.8rem;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  outline: none;
+  background: var(--bg-solid);
+  cursor: pointer;
+}
+
+.news-source-filter select:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.news-cadence {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+.news-cadence > svg {
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
+.news-cadence span,
+.news-cadence small {
+  display: block;
+}
+
+.news-cadence span {
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.news-cadence small {
+  margin-top: 0.12rem;
+  font-size: 0.74rem;
+}
+
+.news-inline-error {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.news-list.is-loading {
+  opacity: 0.58;
+  pointer-events: none;
+}
+
+.news-pagination {
+  display: flex;
+  margin-top: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.news-pagination > span {
+  min-width: 7rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+  text-align: center;
 }
 
 .news-item {
@@ -1380,6 +1534,46 @@ img {
 
   .article-prose {
     border-radius: 1.25rem;
+  }
+
+  .article-table-wrap {
+    width: calc(100% + 1.5rem);
+    margin-inline: -0.75rem;
+    border-radius: 0.85rem;
+  }
+
+  .article-prose table {
+    min-width: 36rem;
+    font-size: 0.9rem;
+  }
+
+  .article-prose th,
+  .article-prose td {
+    padding: 0.72rem 0.8rem;
+  }
+
+  .news-controls,
+  .news-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .news-source-filter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .news-source-filter select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .news-cadence {
+    text-align: left;
+  }
+
+  .news-pagination > span {
+    order: -1;
   }
 
   .comments-panel {

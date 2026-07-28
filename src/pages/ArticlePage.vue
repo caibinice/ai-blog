@@ -11,6 +11,10 @@ const props = defineProps<{ slug: string }>()
 const { locale, t } = useLocale()
 const article = computed(() => getArticle(locale.value, props.slug))
 const md = new MarkdownIt({ html: false, linkify: true, typographer: true })
+md.renderer.rules.table_open = () => (
+  `<div class="article-table-wrap" role="region" aria-label="${md.utils.escapeHtml(t.value.articleTable)}" tabindex="0"><table>`
+)
+md.renderer.rules.table_close = () => '</table></div>'
 const rendered = computed(() => article.value ? md.render(article.value.body) : '')
 
 useHead(computed(() => ({
