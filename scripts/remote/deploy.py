@@ -123,7 +123,11 @@ def systemd_env(values: dict[str, str]) -> bytes:
 
 
 def build_archive(
-    destination: Path, *, dist: Path, jar: Path | None = None
+    destination: Path,
+    *,
+    dist: Path,
+    jar: Path | None = None,
+    extra_directories: dict[str, Path] | None = None,
 ) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     with tarfile.open(destination, "w:gz") as bundle:
@@ -132,6 +136,15 @@ def build_archive(
                 bundle.add(source, arcname=(Path("dist") / source.relative_to(dist)).as_posix())
         if jar is not None:
             bundle.add(jar, arcname="app.jar")
+        for arcname, directory in (extra_directories or {}).items():
+            for source in sorted(directory.rglob("*")):
+                if source.is_file():
+                    bundle.add(
+                        source,
+                        arcname=(
+                            Path(arcname) / source.relative_to(directory)
+                        ).as_posix(),
+                    )
 
 
 def find_jar(root: Path) -> Path:
@@ -193,6 +206,9 @@ def main() -> None:
         archives["cockpit"],
         dist=COCKPIT_ROOT / "frontend" / "dist",
         jar=find_jar(COCKPIT_ROOT),
+        extra_directories={
+            "mcp-servers": COCKPIT_ROOT / "backend" / "mcp-servers",
+        },
     )
 
     cross_env = systemd_env(
@@ -250,7 +266,7 @@ def main() -> None:
             "FLYWAY_BASELINE_ON_MIGRATE": "true",
             "FLYWAY_BASELINE_VERSION": "0",
             "LLM_ENABLED": "true",
-            "LLM_PROVIDER": "spring-ai",
+            "LLM_PROVIDER": "openai-compatible",
             "OPENAI_BASE_URL": cockpit_llm.get(
                 "base-url", "https://api.deepseek.com"
             ),
@@ -269,7 +285,10 @@ def main() -> None:
             "EMBEDDING_DIMENSIONS": cockpit_credentials.get(
                 "embedding", "dimensions", fallback="1536"
             ),
-            "MCP_ENABLED": "false",
+            "MCP_ENABLED": "true",
+            "MCP_NODE_COMMAND": "/usr/bin/node",
+            "MCP_WEATHER_SERVER": "mcp-servers/weather-mcp-server.js",
+            "MCP_REQUEST_TIMEOUT": "20s",
             "ACTION_PASSWORD": action_auth["password"],
             "ACTION_TOKEN_SECRET": action_auth["tokenSecret"],
             "ACTION_TOKEN_TTL_MINUTES": "30",
@@ -323,7 +342,7 @@ def main() -> None:
 
         wrapper = f"""#!/usr/bin/env bash
 set -euo pipefail
-dnf -y --disablerepo='epel*' install java-17-openjdk-headless nginx >/dev/null
+dnf -y --disablerepo='epel*' install java-17-openjdk-headless nginx nodejs >/dev/null
 java17="$(find /usr/lib/jvm -type f -path '*java-17*/bin/java' | head -n 1)"
 test -x "$java17"
 ln -sfn "$java17" /usr/local/bin/java17
