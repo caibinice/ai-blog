@@ -89,6 +89,30 @@ foreach ($section in @('remote.ssh', 'github', 'deepseek.api')) {
   }
 }
 
+# The operation password belongs to the shared platform rather than one project.
+# Preserve it from an existing shared file, or migrate it from the ignored local
+# deployment state once. Token signing secrets stay in .deploy and are not copied.
+$existingTarget = if (Test-Path -LiteralPath $TargetPath) {
+  Import-IniFile -Path $TargetPath
+} else {
+  [ordered]@{}
+}
+if ($existingTarget.Contains('platform.action')) {
+  Copy-IniSection `
+    -Source $existingTarget `
+    -SourceName 'platform.action' `
+    -Destination $shared `
+    -DestinationName 'platform.action'
+} else {
+  $actionAuthPath = Join-Path $repoRoot '.deploy\action-auth.json'
+  if (Test-Path -LiteralPath $actionAuthPath) {
+    $actionAuth = Get-Content -LiteralPath $actionAuthPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if (-not [string]::IsNullOrWhiteSpace($actionAuth.password)) {
+      $shared['platform.action'] = [ordered]@{ password = $actionAuth.password }
+    }
+  }
+}
+
 foreach ($namespace in $loaded.Keys) {
   foreach ($section in $loaded[$namespace].Keys) {
     Copy-IniSection `

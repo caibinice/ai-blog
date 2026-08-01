@@ -92,16 +92,22 @@ def prepare_secrets() -> tuple[
             "adminPassword": secrets.token_urlsafe(16),
         },
     )
+    shared_credentials = read_ini(SHARED_CREDENTIALS)
+    configured_action_password = shared_credentials.get(
+        "platform.action", "password", fallback=""
+    )
     action = load_or_create_json(
         BLOG_ROOT / ".deploy" / "action-auth.json",
         lambda: {
-            "password": os.environ.get("AI_PLATFORM_ACTION_PASSWORD", ""),
+            "password": os.environ.get("AI_PLATFORM_ACTION_PASSWORD", "")
+            or configured_action_password,
             "tokenSecret": secrets.token_urlsafe(48),
         },
     )
     if not action.get("password"):
         raise RuntimeError(
-            "Set AI_PLATFORM_ACTION_PASSWORD once to create ignored action-auth.json."
+            "Set [platform.action] password in the shared credentials file or "
+            "provide AI_PLATFORM_ACTION_PASSWORD once."
         )
     cross["adminPassword"] = action["password"]
     (BLOG_ROOT / ".deploy" / "crossborder-secrets.json").write_text(

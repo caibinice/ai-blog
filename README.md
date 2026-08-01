@@ -17,8 +17,12 @@ AI。Vue 3 + TypeScript + Vite SSG 构建，服务器只托管静态文件。
 
 ## 本地开发
 
+在新机器复现四仓库时，先阅读
+[`docs/new-machine-setup.md`](docs/new-machine-setup.md)。它固定了四个目录名、
+量化分支、共享凭据校验、依赖安装、统一部署和 GitHub 代理推送方式。
+
 ```powershell
-npm install
+npm ci
 npm run typecheck
 npm test
 npm run build
@@ -43,6 +47,9 @@ pwsh -File scripts/sync-shared-credentials.ps1
 脱敏结构见 [`credentials.example.txt`](credentials.example.txt)。DeepSeek
 token 只在本地翻译或部署阶段读取，不进入浏览器。
 生产构建关闭 source map，仅保守混淆自有业务 chunk；vendor 不混淆。
+
+四仓库只使用博客根目录的一份 `credentials.txt` 即可；首次部署所需的
+统一操作口令放在 `[platform.action]`，签名密钥由脚本写入忽略的 `.deploy/`。
 
 ## 部署
 
