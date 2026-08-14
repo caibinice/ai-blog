@@ -53,7 +53,7 @@ function Copy-IniSection {
 $projects = @(
   [pscustomobject]@{
     Namespace = 'quant'
-    Path = Join-Path $codesRoot 'ai-quantum\credentials.txt'
+    Path = Join-Path $codesRoot 'ai-quantitative-trading\credentials.txt'
   },
   [pscustomobject]@{
     Namespace = 'crossborder'
@@ -61,7 +61,7 @@ $projects = @(
   },
   [pscustomobject]@{
     Namespace = 'cockpit'
-    Path = Join-Path $codesRoot 'ai-agent-rag-demo\credentials.txt'
+    Path = Join-Path $codesRoot 'enterprise-ai-cockpit\credentials.txt'
   }
 )
 

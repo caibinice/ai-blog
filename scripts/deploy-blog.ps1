@@ -5,12 +5,12 @@ param(
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
 $Codes = Split-Path -Parent $Root
-$Python = Join-Path $Codes 'ai-quantum\.venv\Scripts\python.exe'
+$Python = Join-Path $Codes 'ai-quantitative-trading\.venv\Scripts\python.exe'
 
 & (Join-Path $Root 'scripts\bootstrap-workspace.ps1') -CodesRoot $Codes
 if ($LASTEXITCODE -ne 0) { throw '四仓库工作区检查失败。' }
 if (-not (Test-Path -LiteralPath $Python)) {
-    throw '缺少 ai-quantum\.venv。请先运行 scripts\bootstrap-workspace.ps1 -InstallDependencies。'
+    throw '缺少 ai-quantitative-trading\.venv。请先运行 scripts\bootstrap-workspace.ps1 -InstallDependencies。'
 }
 
 Push-Location $Root

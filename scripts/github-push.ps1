@@ -14,9 +14,9 @@ $blogRoot = Split-Path -Parent $PSScriptRoot
 $codesRoot = Split-Path -Parent $blogRoot
 $definitions = @{
   blog = @{ Directory = 'ai-blog'; Branch = 'main'; Namespace = 'blog' }
-  quant = @{ Directory = 'ai-quantum'; Branch = 'agent/research-infrastructure'; Namespace = 'quant' }
+  quant = @{ Directory = 'ai-quantitative-trading'; Branch = 'main'; Namespace = 'quant' }
   crossborder = @{ Directory = 'crossborder-trend-report'; Branch = 'main'; Namespace = 'crossborder' }
-  cockpit = @{ Directory = 'ai-agent-rag-demo'; Branch = 'main'; Namespace = 'cockpit' }
+  cockpit = @{ Directory = 'enterprise-ai-cockpit'; Branch = 'main'; Namespace = 'cockpit' }
 }
 $definition = $definitions[$Project]
 $projectRoot = Join-Path $codesRoot $definition.Directory

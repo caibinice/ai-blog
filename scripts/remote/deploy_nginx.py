@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 BLOG_ROOT = Path(__file__).resolve().parents[2]
-QUANT_ROOT = BLOG_ROOT.parent / "ai-quantum"
+QUANT_ROOT = BLOG_ROOT.parent / "ai-quantitative-trading"
 sys.path.insert(0, str(QUANT_ROOT / "scripts" / "remote"))
 from remote_client import RemoteClient  # noqa: E402
 
@@ -25,12 +25,21 @@ backup=/root/nginx-backup-$(date +%Y%m%d%H%M%S)
 mkdir -p "$backup"
 cp /etc/nginx/nginx.conf "$backup/nginx.conf"
 cp /etc/nginx/conf.d/ai-platform.conf "$backup/ai-platform.conf"
+if [ -f /etc/nginx/snippets/ai-platform-routes.conf ]; then
+  cp /etc/nginx/snippets/ai-platform-routes.conf "$backup/ai-platform-routes.conf"
+  touch "$backup/had-ai-platform-routes"
+fi
 echo "Previous config saved to $backup"
 
 restore() {
   echo 'Config test failed. Restoring previous configuration.'
   cp "$backup/nginx.conf" /etc/nginx/nginx.conf
   cp "$backup/ai-platform.conf" /etc/nginx/conf.d/ai-platform.conf
+  if [ -f "$backup/had-ai-platform-routes" ]; then
+    install -m 644 "$backup/ai-platform-routes.conf" /etc/nginx/snippets/ai-platform-routes.conf
+  else
+    rm -f /etc/nginx/snippets/ai-platform-routes.conf
+  fi
   nginx -t
   echo 'Previous configuration restored and verified. Nginx was not reloaded.'
   exit 1
@@ -38,13 +47,15 @@ restore() {
 
 install -m 644 /tmp/ai-platform-nginx.conf /etc/nginx/nginx.conf
 install -m 644 /tmp/ai-platform.conf /etc/nginx/conf.d/ai-platform.conf
+install -d -m 755 /etc/nginx/snippets
+install -m 644 /tmp/ai-platform-routes.conf /etc/nginx/snippets/ai-platform-routes.conf
 
 nginx -t || restore
 
 systemctl reload nginx
 systemctl is-active --quiet nginx || restore
 
-rm -f /tmp/ai-platform-nginx.conf /tmp/ai-platform.conf
+rm -f /tmp/ai-platform-nginx.conf /tmp/ai-platform.conf /tmp/ai-platform-routes.conf
 echo 'Nginx configuration updated and reloaded.'
 """
 
@@ -60,6 +71,11 @@ def main() -> None:
         remote.upload_file(
             BLOG_ROOT / "deploy" / "nginx" / "ai-platform.conf",
             "/tmp/ai-platform.conf",
+            0o644,
+        )
+        remote.upload_file(
+            BLOG_ROOT / "deploy" / "nginx" / "ai-platform-routes.conf",
+            "/tmp/ai-platform-routes.conf",
             0o644,
         )
         remote.upload_bytes(REMOTE_SCRIPT.encode(), "/tmp/update-nginx.sh", 0o700)

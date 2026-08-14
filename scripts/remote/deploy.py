@@ -13,9 +13,9 @@ from pathlib import Path
 
 BLOG_ROOT = Path(__file__).resolve().parents[2]
 CODES_ROOT = BLOG_ROOT.parent
-QUANT_ROOT = CODES_ROOT / "ai-quantum"
+QUANT_ROOT = CODES_ROOT / "ai-quantitative-trading"
 CROSS_ROOT = CODES_ROOT / "crossborder-trend-report"
-COCKPIT_ROOT = CODES_ROOT / "ai-agent-rag-demo"
+COCKPIT_ROOT = CODES_ROOT / "enterprise-ai-cockpit"
 SHARED_CREDENTIALS = BLOG_ROOT / "credentials.txt"
 
 sys.path.insert(0, str(QUANT_ROOT / "scripts" / "remote"))
@@ -236,12 +236,15 @@ def main() -> None:
             "JWT_SECRET": cross_secrets["jwtSecret"],
             "INITIAL_ADMIN_PASSWORD": cross_secrets["adminPassword"],
             "FIXED_ADMIN_PASSWORD": action_auth["password"],
-            "CORS_ALLOWED_ORIGINS": "https://101.132.78.217",
+            "CORS_ALLOWED_ORIGINS": "https://caibinice.com,https://www.caibinice.com",
             "SOURCE_MODE": "external",
             "AI_ENRICHMENT_ENABLED": "true",
             "DEEPSEEK_BASE_URL": cross_llm.get("base-url", "https://api.deepseek.com"),
             "DEEPSEEK_API_KEY": cross_llm["api-key"],
-            "DEEPSEEK_MODEL": cross_llm.get("model", "deepseek-v4-pro"),
+            "DEEPSEEK_MODEL": cross_llm.get("model", "deepseek-v4-flash"),
+            "DEEPSEEK_THINKING_ENABLED": "true",
+            "DEEPSEEK_REASONING_EFFORT": "max",
+            "REPORT_CRON": "0 30 8 * * *",
             "RAKUTEN_APPLICATION_ID": cross_rakuten.get("application_id", ""),
             "RAKUTEN_ACCESS_KEY": cross_rakuten.get("access_key", ""),
             "RAKUTEN_AFFILIATE_ID": cross_rakuten.get("affiliate_id", ""),
@@ -279,6 +282,8 @@ def main() -> None:
             "OPENAI_API_KEY": cockpit_llm["api-key"],
             "DEEPSEEK_API_KEY": cockpit_llm["api-key"],
             "LLM_MODEL": cockpit_llm.get("model", "deepseek-v4-flash"),
+            "LLM_THINKING_ENABLED": "true",
+            "LLM_REASONING_EFFORT": "max",
             "VECTOR_ENABLED": "true",
             "VECTOR_DATABASE_URL": (
                 "jdbc:postgresql://127.0.0.1:"
@@ -344,6 +349,11 @@ def main() -> None:
             0o644,
         )
         remote.upload_file(
+            BLOG_ROOT / "deploy" / "nginx" / "ai-platform-routes.conf",
+            "/tmp/ai-platform-routes.conf",
+            0o644,
+        )
+        remote.upload_file(
             BLOG_ROOT / "deploy" / "sample-resources.sh",
             "/tmp/ai-platform-sample-resources",
             0o755,
@@ -378,6 +388,8 @@ install -m 644 /tmp/crossborder-trend.service /etc/systemd/system/crossborder-tr
 install -m 644 /tmp/enterprise-ai-cockpit.service /etc/systemd/system/enterprise-ai-cockpit.service
 install -m 644 /tmp/ai-platform-nginx.conf /etc/nginx/nginx.conf
 install -m 644 /tmp/ai-platform.conf /etc/nginx/conf.d/ai-platform.conf
+install -d -m 755 /etc/nginx/snippets
+install -m 644 /tmp/ai-platform-routes.conf /etc/nginx/snippets/ai-platform-routes.conf
 rm -f /etc/nginx/conf.d/ai-quant.conf
 install -m 755 /tmp/ai-platform-sample-resources /usr/local/sbin/ai-platform-sample-resources
 
@@ -427,7 +439,7 @@ systemd-run --unit=ai-platform-resource-sample --collect \\
         for archive in archives.values():
             archive.unlink(missing_ok=True)
 
-    print("PUBLIC_URL=https://101.132.78.217/")
+    print("PUBLIC_URL=https://caibinice.com/")
     print(f"BLOG_RELEASE={releases['blog']}")
     print(f"CROSS_RELEASE={releases['cross']}")
     print(f"COCKPIT_RELEASE={releases['cockpit']}")

@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($CredentialsPath)) {
     $shared = Join-Path $repoRoot 'credentials.txt'
-    $legacy = Join-Path (Split-Path $repoRoot -Parent) 'ai-quantum\credentials.txt'
+    $legacy = Join-Path (Split-Path $repoRoot -Parent) 'ai-quantitative-trading\credentials.txt'
     $CredentialsPath = if (Test-Path -LiteralPath $shared) { $shared } else { $legacy }
 }
 $Root = Split-Path -Parent $PSScriptRoot
@@ -41,7 +41,8 @@ function Invoke-Translation {
     }
     $payload = @{
         model = $script:Model
-        temperature = 0.2
+        thinking = @{ type = 'enabled' }
+        reasoning_effort = 'max'
         messages = @(
             @{ role = 'system'; content = 'You are a careful technical editor for a multilingual personal engineering blog.' }
             @{ role = 'user'; content = "$instruction`n`n$Text" }
@@ -81,7 +82,7 @@ if (-not (Test-Path -LiteralPath $CredentialsPath)) {
 $deepseek = Read-IniSection -Path $CredentialsPath -Section 'deepseek.api'
 $script:ApiKey = $deepseek['api-key']
 $script:BaseUrl = if ($deepseek['base-url']) { $deepseek['base-url'] } else { 'https://api.deepseek.com' }
-$script:Model = if ($deepseek['model']) { $deepseek['model'] } else { 'deepseek-chat' }
+$script:Model = if ($deepseek['model']) { $deepseek['model'] } else { 'deepseek-v4-flash' }
 if (-not $script:ApiKey) { throw 'deepseek.api api-key is missing.' }
 
 $targets = @(

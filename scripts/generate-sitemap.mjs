@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const root = path.resolve('dist')
-const origin = process.env.SITE_ORIGIN || 'https://101.132.78.217'
+const origin = process.env.SITE_ORIGIN || 'https://caibinice.com'
 const paths = []
 
 function walk(directory, prefix = '') {

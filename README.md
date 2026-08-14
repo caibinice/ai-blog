@@ -55,7 +55,8 @@ token 只在本地翻译或部署阶段读取，不进入浏览器。
 
 统一 Nginx、Java 内存上限、release 与回滚说明见
 [`docs/deployment.md`](docs/deployment.md)。默认生产地址：
-[https://101.132.78.217/](https://101.132.78.217/)。
+[https://caibinice.com/](https://caibinice.com/)。域名证书可在 ICP 备案完成前
+通过 DNS-01 签发；备案仍决定中国内地阿里云公网入口是否持续、稳定放行。
 
 ## License
 

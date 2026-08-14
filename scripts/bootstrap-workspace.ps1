@@ -20,7 +20,7 @@ $projects = @(
     Remote = 'https://github.com/caibinice/ai-blog.git'
   },
   [pscustomobject]@{
-    Name = 'quant'; Directory = 'ai-quantum'; Branch = 'agent/research-infrastructure'
+    Name = 'quant'; Directory = 'ai-quantitative-trading'; Branch = 'main'
     Remote = 'https://github.com/caibinice/ai-quantitative-trading.git'
   },
   [pscustomobject]@{
@@ -28,7 +28,7 @@ $projects = @(
     Remote = 'https://github.com/caibinice/crossborder-trend-report.git'
   },
   [pscustomobject]@{
-    Name = 'cockpit'; Directory = 'ai-agent-rag-demo'; Branch = 'main'
+    Name = 'cockpit'; Directory = 'enterprise-ai-cockpit'; Branch = 'main'
     Remote = 'https://github.com/caibinice/enterprise-ai-cockpit.git'
   }
 )
@@ -173,10 +173,10 @@ if ($InstallDependencies) {
   Push-Location (Join-Path $CodesRoot 'ai-blog')
   try { npm ci --no-audit --no-fund; if ($LASTEXITCODE -ne 0) { throw '博客依赖安装失败。' } } finally { Pop-Location }
 
-  & (Join-Path $CodesRoot 'ai-quantum\scripts\setup.ps1')
+  & (Join-Path $CodesRoot 'ai-quantitative-trading\scripts\setup.ps1')
   if ($LASTEXITCODE -ne 0) { throw '量化项目依赖安装失败。' }
 
-  foreach ($directory in @('crossborder-trend-report', 'ai-agent-rag-demo')) {
+  foreach ($directory in @('crossborder-trend-report', 'enterprise-ai-cockpit')) {
     Push-Location (Join-Path $CodesRoot "$directory\frontend")
     try { npm ci --no-audit --no-fund; if ($LASTEXITCODE -ne 0) { throw "$directory 前端依赖安装失败。" } } finally { Pop-Location }
   }

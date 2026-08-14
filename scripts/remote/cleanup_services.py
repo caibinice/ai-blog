@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-QUANT_ROOT = Path(__file__).resolve().parents[3] / "ai-quantum"
+QUANT_ROOT = Path(__file__).resolve().parents[3] / "ai-quantitative-trading"
 sys.path.insert(0, str(QUANT_ROOT / "scripts" / "remote"))
 from remote_client import RemoteClient  # noqa: E402
 

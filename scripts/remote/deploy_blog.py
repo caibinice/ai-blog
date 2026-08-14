@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 BLOG_ROOT = Path(__file__).resolve().parents[2]
-QUANT_ROOT = BLOG_ROOT.parent / "ai-quantum"
+QUANT_ROOT = BLOG_ROOT.parent / "ai-quantitative-trading"
 sys.path.insert(0, str(QUANT_ROOT / "scripts" / "remote"))
 from remote_client import RemoteClient  # noqa: E402
 
@@ -54,7 +54,7 @@ systemctl reload nginx
 find "$root/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\\n' \
   | sort -nr | tail -n +6 | cut -d' ' -f2- | xargs -r rm -rf
 rm -f {remote_archive}
-curl -fsS https://127.0.0.1/ -k -H 'Host: 101.132.78.217' >/dev/null
+curl -fsS --resolve caibinice.com:443:127.0.0.1 https://caibinice.com/ >/dev/null
 echo 'Blog release activated: {release}'
 """,
                 root=True,

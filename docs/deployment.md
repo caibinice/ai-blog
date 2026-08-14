@@ -15,9 +15,34 @@
 保留五版。服务器仅安装 OpenJDK 17 headless。
 
 发布机必须按 [`new-machine-setup.md`](new-machine-setup.md) 将四个仓库以固定
-目录名放在同一父目录；量化仓库使用 `agent/research-infrastructure`，其余
-三个使用 `main`。发布脚本启动时会先验证目录、origin、分支、基础工具和
+目录名放在同一父目录；四个仓库都使用 `main`。发布脚本启动时会先验证
+目录、origin、分支、基础工具和
 共享凭据，并在缺少依赖时提示先运行统一 bootstrap。
+
+## 域名、HTTPS 与 ICP
+
+生产主站固定为 `https://caibinice.com`，证书同时包含
+`caibinice.com` 与 `www.caibinice.com`；HTTP 和 `www` HTTPS 请求统一
+301 到主站。`https://101.132.78.217` 继续使用单独的短期 IP 证书，作为
+备案期间的运维备用入口。服务器位于中国内地的阿里云实例时仍应完成域名
+ICP 备案；仅完成 A 记录解析并不代表所有公网链路都会持续放行。
+
+```powershell
+curl.exe --noproxy "*" -I `
+  http://caibinice.com/.well-known/acme-challenge/preflight
+```
+
+备案前可通过 DNS-01 TXT 验证签发域名证书，这项验证只依赖 DNS 控制权，
+与 80/443 端口是否已放行无关。当前证书目录为
+`/opt/ai-quantitative-trading/shared/letsencrypt/live/caibinice.com`，同时覆盖
+根域名与 `www`。统一 Nginx 为域名证书和 IP 证书设置独立 TLS server，
+公共路由位于 `/etc/nginx/snippets/ai-platform-routes.conf`。
+
+在 AliDNS 最小权限 API 凭据接入前，手工 DNS-01 域名证书设置为
+`autorenew = False`，避免定时任务等待人工 TXT 记录；到期前需要再次手工
+验证或接入 AliDNS 自动化后重新启用。`ai-quant-cert-renew.timer` 继续负责
+短期 IP 证书，运行时间为北京时间 03:17 和 12:17，避开 DeepSeek 峰值
+计价时段。
 
 环境文件和管理令牌在 `/opt/.../shared`，统一操作口令及签名密钥的本地
 副本位于忽略的 `.deploy/action-auth.json`。口令不进入前端、README 或

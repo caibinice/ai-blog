@@ -18,13 +18,12 @@
 ```text
 <codes-root>/
 ├── ai-blog/                  main
-├── ai-quantum/               agent/research-infrastructure
+├── ai-quantitative-trading/  main
 ├── crossborder-trend-report/ main
-└── ai-agent-rag-demo/        main
+└── enterprise-ai-cockpit/    main
 ```
 
-量化仓库不是从默认分支运行，必须检出表中的
-`agent/research-infrastructure`。
+四个仓库都从默认的 `main` 分支运行。
 
 ## 2. 克隆与同步
 
@@ -42,8 +41,8 @@ pwsh -File .\ai-blog\scripts\bootstrap-workspace.ps1 `
 也可以手工 clone；量化项目要显式使用：
 
 ```powershell
-git clone --branch agent/research-infrastructure --single-branch `
-  https://github.com/caibinice/ai-quantitative-trading.git ai-quantum
+git clone --branch main --single-branch `
+  https://github.com/caibinice/ai-quantitative-trading.git ai-quantitative-trading
 ```
 
 ## 3. 只复制一份凭据
@@ -97,8 +96,8 @@ pwsh -File scripts\deploy.ps1 -BuildOnly
 ```powershell
 pwsh -File D:\codes\ai-blog\scripts\deploy-blog.ps1
 
-Set-Location D:\codes\ai-agent-rag-demo
-& D:\codes\ai-quantum\.venv\Scripts\python.exe `
+Set-Location D:\codes\enterprise-ai-cockpit
+& D:\codes\ai-quantitative-trading\.venv\Scripts\python.exe `
   scripts\remote\deploy_cockpit.py
 ```
 
@@ -133,8 +132,8 @@ pwsh -File D:\codes\ai-blog\scripts\github-push.ps1 `
   -Project blog -ValidateOnly
 
 # 各项目质量门禁
-pwsh -File D:\codes\ai-quantum\scripts\check.ps1
+pwsh -File D:\codes\ai-quantitative-trading\scripts\check.ps1
 npm --prefix D:\codes\ai-blog run build
 mvn -f D:\codes\crossborder-trend-report\backend\pom.xml test
-mvn -f D:\codes\ai-agent-rag-demo\backend\pom.xml test
+mvn -f D:\codes\enterprise-ai-cockpit\backend\pom.xml test
 ```
