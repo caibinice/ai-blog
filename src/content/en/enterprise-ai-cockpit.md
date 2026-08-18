@@ -9,6 +9,8 @@ Are the knowledge base and documents persisted? How do vectors sync when a docum
 
 What these questions have in common is that they all live *outside* the conversation. The chat box is only the entrance; what actually decides whether this can ship is the storage, retrieval, event stream, and fallback paths behind it. This project is answering these questions that are closer to real-world deployment. It doesn't try to be feature-complete; it tries to make every step from upload to answer—every step that could fail *silently*—explicit.
 
+> **August 2026 update:** This article preserves the initial vector-first, lexical-fallback architecture. The live version now uses structure-aware chunks, parallel dense and lexical recall, RRF fusion, lifecycle filters, deduplication, and adjacent-chunk merging. See [Treating Enterprise RAG as Knowledge Engineering](/en/articles/enterprise-rag-knowledge-engineering) for the complete tuning approach.
+
 ## Two Types of Databases with Different Responsibilities
 
 MySQL stores knowledge bases, document metadata, data sources, report templates, run records, conversations, and business configurations. PostgreSQL + pgvector stores fixed-dimension vectors and chunk metadata.

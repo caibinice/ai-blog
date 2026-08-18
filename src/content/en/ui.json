@@ -38,6 +38,8 @@
   "previousPage": "Previous",
   "nextPage": "Next",
   "newsPagination": "News pagination",
+  "articlePagination": "Article pagination",
+  "pageLabel": "Page",
   "noRecentNews": "No recent updates from this source in the last 7 days.",
   "guestbookTitle": "Leave a Message",
   "guestbookBody": "No registration required. Your email is only used for necessary contact and message management, and will not be displayed publicly.",

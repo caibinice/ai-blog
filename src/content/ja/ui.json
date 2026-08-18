@@ -38,6 +38,8 @@
   "previousPage": "前へ",
   "nextPage": "次へ",
   "newsPagination": "ニュースのページ切り替え",
+  "articlePagination": "記事のページ切り替え",
+  "pageLabel": "ページ",
   "noRecentNews": "この情報源には過去7日間の新しい記事がありません。",
   "guestbookTitle": "メッセージを残す",
   "guestbookBody": "登録は不要です。メールアドレスは連絡や管理が必要な場合だけに使用し、公開しません。",

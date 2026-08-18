@@ -1,6 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router'
 import type { Locale } from './lib/i18n'
-import { articleMeta } from './lib/articles'
+import { articleMeta, articlePageCount } from './lib/articles'
 import HomePage from './pages/HomePage.vue'
 import ArticlesPage from './pages/ArticlesPage.vue'
 import ArticlePage from './pages/ArticlePage.vue'
@@ -16,11 +16,20 @@ for (const locale of ['zh', 'en', 'ja'] as Locale[]) {
   const meta = { locale }
   localizedRoutes.push(
     { path: prefix || '/', name: `home-${locale}`, component: HomePage, meta },
-    { path: `${prefix}/articles`, name: `articles-${locale}`, component: ArticlesPage, meta },
+    { path: `${prefix}/articles`, name: `articles-${locale}`, component: ArticlesPage, props: { page: 1 }, meta },
     { path: `${prefix}/projects`, name: `projects-${locale}`, component: ProjectsPage, meta },
     { path: `${prefix}/news`, name: `news-${locale}`, component: NewsPage, meta },
     { path: `${prefix}/guestbook`, name: `guestbook-${locale}`, component: GuestbookPage, meta },
   )
+  for (let page = 2; page <= articlePageCount(); page += 1) {
+    localizedRoutes.push({
+      path: `${prefix}/articles/page/${page}`,
+      name: `articles-${locale}-page-${page}`,
+      component: ArticlesPage,
+      props: { page },
+      meta,
+    })
+  }
   for (const article of articleMeta) {
     localizedRoutes.push({
       path: `${prefix}/articles/${article.slug}`,

@@ -1,15 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { articleMeta, getArticle, listArticles } from './articles'
+import { articleMeta, articlePageCount, getArticle, listArticlePage, listArticles } from './articles'
 import { copy, localizedPath, type Locale } from './i18n'
 
 describe('localized static content', () => {
   const locales: Locale[] = ['zh', 'en', 'ja']
 
-  it.each(locales)('ships all six articles in %s', (locale) => {
+  it.each(locales)('ships all seven articles in %s', (locale) => {
     const articles = listArticles(locale)
-    expect(articles).toHaveLength(6)
+    expect(articles).toHaveLength(7)
     expect(articles.map(({ slug }) => slug)).toEqual(articleMeta.map(({ slug }) => slug))
     expect(articles.every(({ title, excerpt, body }) => title && excerpt && body.length > 500)).toBe(true)
+  })
+
+  it.each(locales)('builds deterministic static article pages in %s', (locale) => {
+    expect(articlePageCount()).toBe(2)
+    expect(listArticlePage(locale, 1)).toHaveLength(6)
+    expect(listArticlePage(locale, 1)[0].slug).toBe('enterprise-rag-knowledge-engineering')
+    expect(listArticlePage(locale, 2).map(({ slug }) => slug)).toEqual(['ai-quant-system'])
   })
 
   it('keeps project navigation in every translated article', () => {

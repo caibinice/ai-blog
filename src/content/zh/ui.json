@@ -38,6 +38,8 @@
   "previousPage": "上一页",
   "nextPage": "下一页",
   "newsPagination": "新闻分页",
+  "articlePagination": "文章分页",
+  "pageLabel": "第",
   "noRecentNews": "最近 7 天暂无该来源的新内容。",
   "guestbookTitle": "留下一句话",
   "guestbookBody": "无需注册。邮箱仅用于必要联系与留言管理，不会公开展示。",

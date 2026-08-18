@@ -14,6 +14,8 @@ export interface Article extends ArticleMeta {
   readingMinutes: number
 }
 
+export const ARTICLES_PER_PAGE = 6
+
 export const articleMeta: ArticleMeta[] = [
   { slug: 'ai-quant-system', date: '2025-06-18', tags: ['AI', 'Quant', 'FastAPI'], projectPath: '/quant/' },
   { slug: 'trust-the-backtest', date: '2025-09-06', tags: ['Backtest', 'Learning', 'Risk'] },
@@ -21,6 +23,7 @@ export const articleMeta: ArticleMeta[] = [
   { slug: 'llm-sentiment-walk-forward', date: '2026-02-14', tags: ['LLM', 'Sentiment', 'Walk-forward'], projectPath: '/quant/' },
   { slug: 'enterprise-ai-cockpit', date: '2026-05-02', tags: ['RAG', 'Spring AI', 'pgvector'], projectPath: '/smartCockpit/' },
   { slug: 'multi-branch-feature-migration', date: '2026-07-15', tags: ['Git', 'Cherry-pick', 'Deployment'] },
+  { slug: 'enterprise-rag-knowledge-engineering', date: '2026-08-18', tags: ['RAG', 'Hybrid Search', 'MCP', 'Knowledge Engineering'], projectPath: '/smartCockpit/' },
 ]
 
 const modules = import.meta.glob('../content/**/*.md', {
@@ -56,4 +59,14 @@ export function getArticle(locale: Locale, slug: string): Article | undefined {
 
 export function listArticles(locale: Locale): Article[] {
   return articleMeta.map((item) => getArticle(locale, item.slug)).filter((item): item is Article => Boolean(item))
+}
+
+export function articlePageCount(): number {
+  return Math.max(1, Math.ceil(articleMeta.length / ARTICLES_PER_PAGE))
+}
+
+export function listArticlePage(locale: Locale, page: number): Article[] {
+  const normalizedPage = Math.min(articlePageCount(), Math.max(1, Math.trunc(page) || 1))
+  const start = (normalizedPage - 1) * ARTICLES_PER_PAGE
+  return listArticles(locale).slice().reverse().slice(start, start + ARTICLES_PER_PAGE)
 }
