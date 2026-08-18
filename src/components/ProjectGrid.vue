@@ -28,7 +28,7 @@ onMounted(async () => {
 
 <template>
   <div class="project-grid">
-    <a v-for="project in cards" :key="project.key" class="project-card glass-panel" :href="project.path">
+    <a v-for="project in cards" :key="project.key" class="project-card glass-panel" :href="project.path" target="_blank" rel="noopener noreferrer">
       <div class="project-image" :style="{ '--project-accent': project.accent }">
         <img :src="project.image" :alt="projectAlt(project.title[locale])" loading="lazy" />
         <span class="status-pill" :class="project.status">

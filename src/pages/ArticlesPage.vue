@@ -14,7 +14,7 @@ const totalPages = articlePageCount()
 const articles = computed(() => listArticlePage(locale.value, currentPage.value))
 const pagePath = (page: number) => localizedPath(locale.value, page <= 1 ? '/articles' : `/articles/page/${page}`)
 useHead(computed(() => ({
-  title: `${t.value.nav.articles}${currentPage.value > 1 ? ` · ${t.value.pageLabel} ${currentPage.value}` : ''} · Fish`,
+  title: `${t.value.nav.articles}${currentPage.value > 1 ? ` · ${t.value.pageLabel} ${currentPage.value}` : ''} · ${t.value.tabBrand}`,
 })))
 </script>
 

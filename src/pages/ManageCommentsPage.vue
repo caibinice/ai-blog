@@ -52,7 +52,7 @@ onMounted(() => {
   token.value = sessionStorage.getItem('fish-blog-admin-token') || ''
   if (token.value) void load()
 })
-useHead({ title: '留言管理 · Fish' })
+useHead({ title: '留言管理 · 鱼非鱼' })
 </script>
 
 <template>

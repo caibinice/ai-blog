@@ -12,10 +12,10 @@ const { locale, t } = useLocale()
 const latest = computed(() => listArticles(locale.value).slice(-3).reverse())
 
 useHead(computed(() => ({
-  title: `Fish · ${t.value.role}`,
+  title: `${t.value.tabBrand} · ${t.value.role}`,
   meta: [
     { name: 'description', content: t.value.heroBody },
-    { property: 'og:title', content: `Fish · ${t.value.role}` },
+    { property: 'og:title', content: `${t.value.brand} · ${t.value.role}` },
     { property: 'og:description', content: t.value.heroBody },
     { property: 'og:image', content: '/og.png' },
     { name: 'twitter:card', content: 'summary_large_image' },

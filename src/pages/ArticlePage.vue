@@ -15,10 +15,18 @@ md.renderer.rules.table_open = () => (
   `<div class="article-table-wrap" role="region" aria-label="${md.utils.escapeHtml(t.value.articleTable)}" tabindex="0"><table>`
 )
 md.renderer.rules.table_close = () => '</table></div>'
+const defaultLinkOpen = md.renderer.rules.link_open
+md.renderer.rules.link_open = (tokens, index, options, env, self) => {
+  tokens[index].attrSet('target', '_blank')
+  tokens[index].attrSet('rel', 'noopener noreferrer')
+  return defaultLinkOpen
+    ? defaultLinkOpen(tokens, index, options, env, self)
+    : self.renderToken(tokens, index, options)
+}
 const rendered = computed(() => article.value ? md.render(article.value.body) : '')
 
 useHead(computed(() => ({
-  title: article.value ? `${article.value.title} · Fish` : `${t.value.articleFallbackTitle} · Fish`,
+  title: article.value ? `${article.value.title} · ${t.value.tabBrand}` : `${t.value.articleFallbackTitle} · ${t.value.tabBrand}`,
   meta: article.value ? [
     { name: 'description', content: article.value.excerpt },
     { property: 'og:title', content: article.value.title },
@@ -45,7 +53,7 @@ useHead(computed(() => ({
       </div>
     </header>
     <div class="article-prose glass-panel" v-html="rendered" />
-    <a v-if="article.projectPath" class="project-cta glass-panel" :href="article.projectPath">
+    <a v-if="article.projectPath" class="project-cta glass-panel" :href="article.projectPath" target="_blank" rel="noopener noreferrer">
       <span>{{ t.viewProject }}</span>
       <ArrowUpRight :size="20" />
     </a>

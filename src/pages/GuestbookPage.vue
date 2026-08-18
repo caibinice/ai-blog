@@ -52,7 +52,7 @@ async function submit() {
 }
 
 onMounted(() => load(true))
-useHead(computed(() => ({ title: `${t.value.guestbookTitle} · Fish` })))
+useHead(computed(() => ({ title: `${t.value.guestbookTitle} · ${t.value.tabBrand}` })))
 </script>
 
 <template>

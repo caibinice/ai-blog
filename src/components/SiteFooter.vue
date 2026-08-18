@@ -8,7 +8,7 @@ const { t } = useLocale()
 <template>
   <footer class="site-footer">
     <div>
-      <strong>Fish</strong>
+      <strong>{{ t.brand }}</strong>
       <span>{{ t.footerTagline }}</span>
     </div>
     <div class="footer-links">

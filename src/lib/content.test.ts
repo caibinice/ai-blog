@@ -41,4 +41,9 @@ describe('localized static content', () => {
     expect(new Set([copy.zh.writingBody, copy.en.writingBody, copy.ja.writingBody]).size).toBe(3)
     expect(new Set([copy.zh.footerTagline, copy.en.footerTagline, copy.ja.footerTagline]).size).toBe(3)
   })
+
+  it('keeps Fish as the visible name and localizes only the browser tab brand', () => {
+    expect([copy.zh.brand, copy.en.brand, copy.ja.brand]).toEqual(['Fish', 'Fish', 'Fish'])
+    expect([copy.zh.tabBrand, copy.en.tabBrand, copy.ja.tabBrand]).toEqual(['鱼非鱼', 'Fish', 'Fish'])
+  })
 })

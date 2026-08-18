@@ -50,7 +50,9 @@ function closeMenus() {
   <header class="site-header">
     <nav class="nav-shell glass-panel" :aria-label="t.primaryNavigation">
       <RouterLink class="brand" :to="localizedPath(locale)" @pointerdown="closeMenus">
-        <span class="brand-mark" aria-hidden="true">F</span>
+        <span class="brand-mark" aria-hidden="true">
+          <img src="/fish-avatar.png" alt="" />
+        </span>
         <span>
           <strong>{{ t.brand }}</strong>
           <small>{{ t.role }}</small>

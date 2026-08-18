@@ -88,7 +88,7 @@ watch(selectedSource, () => {
 })
 
 onMounted(() => void load())
-useHead(computed(() => ({ title: `${t.value.newsTitle} · Fish` })))
+useHead(computed(() => ({ title: `${t.value.newsTitle} · ${t.value.tabBrand}` })))
 </script>
 
 <template>

@@ -185,13 +185,17 @@ img {
   display: grid;
   width: 2.65rem;
   height: 2.65rem;
-  color: white;
   background: linear-gradient(140deg, var(--accent), var(--secondary));
   border-radius: 0.9rem;
   box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 28%, transparent);
-  font-size: 1.15rem;
-  font-weight: 800;
   place-items: center;
+}
+
+.brand-mark img {
+  display: block;
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
 }
 
 .brand strong,
