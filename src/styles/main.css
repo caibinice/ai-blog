@@ -325,7 +325,11 @@ img {
 .hero-copy {
   position: relative;
   z-index: 2;
-  align-self: start;
+  display: flex;
+  min-height: clamp(36rem, 71vh, 44.75rem);
+  align-self: center;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .eyebrow {
@@ -352,6 +356,12 @@ img {
   font-weight: 760;
   letter-spacing: -0.065em;
   line-height: 0.98;
+}
+
+.hero-ja h1 {
+  font-size: clamp(3rem, min(5.3vw, 8.2vh), 5.2rem);
+  letter-spacing: -0.05em;
+  word-break: auto-phrase;
 }
 
 .hero-body {
@@ -439,8 +449,8 @@ img {
   position: relative;
   z-index: 2;
   padding: clamp(1rem, 1.6vw, 1.25rem);
-  margin-top: clamp(5.5rem, 12vh, 10rem);
-  align-self: start;
+  margin-top: 0;
+  align-self: center;
   overflow: hidden;
   border-radius: var(--radius-xl);
   transform: rotate(1.2deg);
@@ -763,7 +773,7 @@ img {
 
 .page-section {
   min-height: 70vh;
-  padding-block: 8.5rem 7rem;
+  padding-block: clamp(3.25rem, 7vh, 4.5rem) 6rem;
 }
 
 .page-heading {
@@ -779,7 +789,7 @@ img {
 
 .article-page {
   max-width: 900px;
-  padding-block: 8rem 7rem;
+  padding-block: clamp(3.25rem, 7vh, 4.5rem) 6rem;
 }
 
 .back-link {
@@ -1472,9 +1482,13 @@ img {
 
   .hero {
     min-height: auto;
-    padding-block: 7rem 4rem;
+    padding-block: clamp(3.5rem, 8vh, 5rem) 4rem;
     grid-template-columns: 1fr;
     gap: 3rem;
+  }
+
+  .hero-copy {
+    min-height: auto;
   }
 
   .signal-card {
@@ -1506,12 +1520,20 @@ img {
   }
 
   .hero h1 {
-    font-size: clamp(3.1rem, 5.4vw, 5.3rem);
+    font-size: clamp(3.1rem, min(5.4vw, 9.3vh), 5.3rem);
+  }
+
+  .hero-ja h1 {
+    font-size: clamp(3rem, min(5vw, 8.2vh), 4.6rem);
   }
 
   .hero-body {
     font-size: clamp(1rem, 1.3vw, 1.1rem);
     line-height: 1.62;
+  }
+
+  .hero-copy {
+    min-height: min(36.5rem, calc(100svh - 6.5rem));
   }
 
   .signal-card p {
@@ -1548,7 +1570,7 @@ img {
   }
 
   .hero {
-    padding-block: 5.5rem 3rem;
+    padding-block: 3.5rem 3rem;
   }
 
   .hero h1 {
@@ -1603,7 +1625,7 @@ img {
 
   .page-section,
   .article-page {
-    padding-block: 6.5rem 4rem;
+    padding-block: 3.5rem 4rem;
   }
 
   .article-header h1 {

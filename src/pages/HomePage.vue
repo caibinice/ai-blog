@@ -24,7 +24,7 @@ useHead(computed(() => ({
 
 <template>
   <div>
-    <section class="hero section-shell">
+    <section class="hero section-shell" :class="`hero-${locale}`">
       <div class="hero-orb hero-orb-one" aria-hidden="true" />
       <div class="hero-orb hero-orb-two" aria-hidden="true" />
       <div class="hero-copy">
