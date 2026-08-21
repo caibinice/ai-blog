@@ -12,7 +12,6 @@ const { locale, t } = useLocale()
 const latest = computed(() => listArticles(locale.value).slice(-3).reverse())
 
 useHead(computed(() => ({
-  title: `${t.value.tabBrand} · ${t.value.role}`,
   meta: [
     { name: 'description', content: t.value.heroBody },
     { property: 'og:title', content: `${t.value.brand} · ${t.value.role}` },

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { ArrowUpRight, ChevronLeft, ChevronRight, Clock3 } from 'lucide-vue-next'
-import { useHead } from '@unhead/vue'
 import { localeTags } from '../lib/i18n'
 import { useLocale } from '../lib/useLocale'
 
@@ -88,7 +87,6 @@ watch(selectedSource, () => {
 })
 
 onMounted(() => void load())
-useHead(computed(() => ({ title: `${t.value.newsTitle} · ${t.value.tabBrand}` })))
 </script>
 
 <template>

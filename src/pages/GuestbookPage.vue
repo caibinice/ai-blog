@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { MessageCircle, Send } from 'lucide-vue-next'
-import { useHead } from '@unhead/vue'
 import { localeTags } from '../lib/i18n'
 import { useLocale } from '../lib/useLocale'
 
@@ -52,7 +51,6 @@ async function submit() {
 }
 
 onMounted(() => load(true))
-useHead(computed(() => ({ title: `${t.value.guestbookTitle} · ${t.value.tabBrand}` })))
 </script>
 
 <template>

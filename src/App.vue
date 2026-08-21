@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useHead } from '@unhead/vue'
 import BackToTop from './components/BackToTop.vue'
 import SiteHeader from './components/SiteHeader.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import { useLocale } from './lib/useLocale'
 
 const { t } = useLocale()
+useHead(computed(() => ({ title: t.value.tabBrand })))
 </script>
 
 <template>

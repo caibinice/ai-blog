@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { KeyRound, LogOut, Trash2 } from 'lucide-vue-next'
-import { useHead } from '@unhead/vue'
 
 interface AdminComment {
   id: number
@@ -52,7 +51,6 @@ onMounted(() => {
   token.value = sessionStorage.getItem('fish-blog-admin-token') || ''
   if (token.value) void load()
 })
-useHead({ title: '留言管理 · 鱼非鱼' })
 </script>
 
 <template>

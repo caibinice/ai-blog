@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useHead } from '@unhead/vue'
 import ProjectGrid from '../components/ProjectGrid.vue'
 import { useLocale } from '../lib/useLocale'
 
 const { t } = useLocale()
-useHead(computed(() => ({ title: `${t.value.nav.projects} · ${t.value.tabBrand}` })))
 </script>
 
 <template>

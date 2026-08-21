@@ -26,7 +26,6 @@ md.renderer.rules.link_open = (tokens, index, options, env, self) => {
 const rendered = computed(() => article.value ? md.render(article.value.body) : '')
 
 useHead(computed(() => ({
-  title: article.value ? `${article.value.title} · ${t.value.tabBrand}` : `${t.value.articleFallbackTitle} · ${t.value.tabBrand}`,
   meta: article.value ? [
     { name: 'description', content: article.value.excerpt },
     { property: 'og:title', content: article.value.title },

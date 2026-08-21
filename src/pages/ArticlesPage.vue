@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import { useHead } from '@unhead/vue'
 import ArticleCard from '../components/ArticleCard.vue'
 import { articlePageCount, listArticlePage } from '../lib/articles'
 import { localizedPath } from '../lib/i18n'
@@ -13,9 +12,6 @@ const currentPage = computed(() => Math.min(articlePageCount(), Math.max(1, prop
 const totalPages = articlePageCount()
 const articles = computed(() => listArticlePage(locale.value, currentPage.value))
 const pagePath = (page: number) => localizedPath(locale.value, page <= 1 ? '/articles' : `/articles/page/${page}`)
-useHead(computed(() => ({
-  title: `${t.value.nav.articles}${currentPage.value > 1 ? ` · ${t.value.pageLabel} ${currentPage.value}` : ''} · ${t.value.tabBrand}`,
-})))
 </script>
 
 <template>
