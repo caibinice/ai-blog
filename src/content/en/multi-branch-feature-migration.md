@@ -1,5 +1,5 @@
 ---
-title: Cherry-pick best practices: taming branches across multi-site deployments
+title: Cherry-Pick Branch Governance for Multi-Site Deployments
 excerpt: When the same system ships to several factories separately, reusing a feature across sites by merging branches into one another eventually spirals out of control. My rule is to let cherry-pick travel a single path — every feature first collapses into one clean commit on the mainline, then gets picked into whichever site needs it.
 ---
 

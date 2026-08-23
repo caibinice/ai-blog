@@ -1,5 +1,5 @@
 ---
-title: From RAG Demo to Enterprise Intelligent Cockpit: Knowledge, Vectors, and Streaming Answers
+title: Enterprise AI Cockpit with RAG, Vector Retrieval, and Streaming Answers
 excerpt: A real enterprise AI experience is more than just a chat box—it’s a cockpit built from data persistence, retrieval evidence, streaming feedback, and business workflows.
 ---
 

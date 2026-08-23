@@ -1,5 +1,5 @@
 ---
-title: Turning “Product Selection Gut Feel” Into Traceable Data: A Cross-Border Trends Daily
+title: Traceable Data Engineering for Cross-Border Trend Reports
 excerpt: Cross-border product selection isn’t about finding a screenshot of a hot-seller list—it’s about organising sources, trends, exchange rates, costs and AI judgements into decision materials you can rerun, and hold accountable, every day.
 ---
 

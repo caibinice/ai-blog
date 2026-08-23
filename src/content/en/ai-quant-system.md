@@ -1,5 +1,5 @@
 ---
-title: From Engineering Loop to Trustworthy Research: My AI Quantitative System
+title: Engineering a Trustworthy AI Quantitative Research System
 excerpt: Instead of starting with "predicting what will go up tomorrow," I first connected data, tasks, factors, backtesting, and learning records into an auditable chain of evidence—this is a walk through every link.
 ---
 

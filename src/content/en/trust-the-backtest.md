@@ -1,5 +1,5 @@
 ---
-title: Before the Pretty Curve: The First Thing I Learned as a Quant Beginner Was to Distrust Backtests
+title: Trustworthy Backtesting for Quantitative Research
 excerpt: I used to treat backtests as answers; now I prefer to treat them as testimony that needs auditing—time, cost, sample, and parameters can all make them lie. This is the cross-examination I run.
 ---
 

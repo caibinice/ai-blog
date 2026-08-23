@@ -24,6 +24,7 @@ export const articleMeta: ArticleMeta[] = [
   { slug: 'enterprise-ai-cockpit', date: '2026-05-02', tags: ['RAG', 'Spring AI', 'pgvector'], projectPath: '/smartCockpit/' },
   { slug: 'multi-branch-feature-migration', date: '2026-07-15', tags: ['Git', 'Cherry-pick', 'Deployment'] },
   { slug: 'enterprise-rag-knowledge-engineering', date: '2026-08-18', tags: ['RAG', 'Hybrid Search', 'MCP', 'Knowledge Engineering'], projectPath: '/smartCockpit/' },
+  { slug: 'sub2api-enterprise-ai-gateway', date: '2026-08-23', tags: ['AI Gateway', 'Sub2API', 'Go', 'Redis', 'Architecture'] },
 ]
 
 const modules = import.meta.glob('../content/**/*.md', {
@@ -51,10 +52,11 @@ export function getArticle(locale: Locale, slug: string): Article | undefined {
   const entry = Object.entries(modules).find(([path]) => path.endsWith(`/${locale}/${slug}.md`))
   if (!entry) return undefined
   const document = parseDocument(entry[1])
-  const wordCount = locale === 'zh'
+  const isCjk = locale === 'zh' || locale === 'ja'
+  const wordCount = isCjk
     ? document.body.replace(/\s/g, '').length
     : document.body.split(/\s+/).length
-  return { ...meta, ...document, readingMinutes: Math.max(4, Math.ceil(wordCount / (locale === 'zh' ? 420 : 220))) }
+  return { ...meta, ...document, readingMinutes: Math.max(4, Math.ceil(wordCount / (isCjk ? 420 : 220))) }
 }
 
 export function listArticles(locale: Locale): Article[] {

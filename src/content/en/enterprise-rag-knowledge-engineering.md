@@ -1,5 +1,5 @@
 ---
-title: Treating Enterprise RAG as Knowledge Engineering: From Answers to an Optimizable System
+title: Enterprise RAG Knowledge Engineering and Continuous Optimization
 excerpt: The model runs the final leg. Reliable enterprise answers depend on structured parsing, hybrid retrieval, lifecycle governance, observable evaluation, and explicit MCP boundaries.
 ---
 

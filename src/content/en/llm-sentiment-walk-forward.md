@@ -1,5 +1,5 @@
 ---
-title: Let large models do what they’re good at: sentiment factors, walk‑forward analysis, and out-of-sample testing
+title: Walk-Forward and Out-of-Sample Validation for LLM Sentiment Factors
 excerpt: I didn’t let the large model decide positions directly; instead, I first turn text into structured events that can be reviewed, then use out-of-sample experiments to see whether it adds incremental value.
 ---
 
