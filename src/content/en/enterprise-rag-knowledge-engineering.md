@@ -1,127 +1,129 @@
 ---
-title: Enterprise RAG Knowledge Engineering and Continuous Optimization
-excerpt: The model runs the final leg. Reliable enterprise answers depend on structured parsing, hybrid retrieval, lifecycle governance, observable evaluation, and explicit MCP boundaries.
+title: Knowledge Engineering and Tunable Cockpit Architecture for Enterprise RAG
+excerpt: A deep dive into enterprise RAG knowledge engineering: structure-aware chunking, hybrid Dense+Keyword retrieval with RRF reranking, lifecycle metadata governance, MCP boundaries, and the Retrieval Lab evaluation loop.
 ---
 
-An enterprise knowledge base creates an easy illusion: once documents have embeddings and a chat box returns fluent prose, RAG is finished. In practice, many failures happen before the model ever sees context. A heading disappears during parsing, a table is flattened, an exact contract number never enters the candidate set, an obsolete policy outranks the current one, or a follow-up such as “does that rule apply to contractors?” is retrieved as a brand-new question with no subject.
+In enterprise knowledge Q&A systems, the primary bottleneck rarely lies in the text generation capabilities of the underlying LLM. Instead, failures typically stem from upstream engineering flaws in document ingestion and retrieval pipelines: lost heading hierarchies, flattened table structures, missed contract numbers or error codes, outdated document versions overriding newer policies, and unresolved conversational references.
 
-I recently upgraded the knowledge pipeline behind the [Enterprise AI Cockpit](/smartCockpit/). The goal was not to replace the model with a larger one. It was to make the question “why did these pieces of evidence reach the model?” observable, testable, and improvable.
+To systematically address these challenges, the [Enterprise AI Cockpit](/smartCockpit/) underwent a comprehensive knowledge engineering overhaul. The engineering focus shifted from prompt hacking to structural document parsing, hybrid retrieval fusion, temporal metadata governance, and closed-loop empirical evaluation.
 
-## RAG is two production pipelines
+## Decoupling the Indexing and Querying Pipelines
 
-RAG is the composition of an indexing path and a query path:
-
-```text
-index: file -> parsing/structure recovery -> chunking -> provenance -> embedding -> index
-query: question -> query understanding -> permission/time filters -> dense + keyword -> rerank -> context -> answer + citations
-```
-
-Either path can destroy information. If the indexer loses heading hierarchy, a good embedding only represents a sentence without its business context. If the query path ignores version and effective dates, accurate similarity can confidently retrieve an expired policy. That changes the debugging order: inspect extraction, candidate recall, filtering and fusion, conflicting versions, and only then the model’s use of evidence.
-
-## Chunking should preserve the smallest useful business context
-
-The earlier implementation used fixed character windows. It was predictable, but it could separate a heading from its body or cut a sentence in half. The new chunker first recognizes Markdown headings, Chinese chapter headings, numbered sections, paragraphs, and sentence boundaries. Character windows are now a final fallback for oversized structural units.
-
-Each child chunk carries its section context:
+RAG is fundamentally a composite system of two decoupled operational pipelines:
 
 ```text
-Section: Refund Approval Rules
-A refund request must be filed within seven days of receipt and include the order number.
+Indexing Pipeline: Ingestion -> Structural Parsing/Heading Recovery -> Semantic Chunking -> Provenance Tracking -> Embedding -> Vector/Inverted Indexing
+Querying Pipeline: Query -> Coreference Resolution -> Policy/Temporal Filtering -> Dense + Keyword Retrieval -> RRF Fusion Reranking -> Context Assembly -> Generation & Citation
 ```
 
-Adjacent chunks retain a bounded overlap. Exact duplicates are removed before indexing, and highly ranked neighboring chunks from the same document are merged in source order after retrieval while repeated overlap is trimmed. This combination avoids two recurring problems: fragments that are too small to mean anything and repeated overlap consuming the context budget.
+Both pipelines can introduce informational decay: losing heading context during indexing leaves embeddings detached from business hierarchies; ignoring validity windows during querying leads to confident citations of obsolete policies.
 
-Every import also records provenance: `source`, `sourceType`, `parser`, `ingestedAt`, `contentHash`, and `chunkStrategy`. These fields do not directly improve prose, but they answer operational questions that matter: where the evidence came from, which parser handled it, whether the content changed, and which indexing strategy created the current vectors.
+To isolate errors effectively, the system enforces a bottom-up diagnostic workflow:
 
-## Dense and lexical retrieval are complementary
-
-Embeddings are good at matching different expressions of the same idea. Lexical search is good at contract IDs, SKUs, error codes, versions, and domain names. Enterprise questions often contain both kinds of signal. Pure vector search can place a generic contract policy above `CN-2026-0818`; pure keyword search can miss that “expenses after termination” answers a question phrased as “can I still claim after leaving?”
-
-The cockpit now retrieves both candidate sets:
+1. **Structural Parsing Audit**: Verify whether document structures, headings, table layouts, and business codes are faithfully preserved;
+2. **Candidate Recall Verification**: Confirm whether ground-truth text chunks are captured within Dense or Keyword candidate sets;
+3. **Filtering and Fusion Review**: Check whether relevant candidates were mistakenly pruned by metadata filters, deduplication, or RRF weighting;
+4. **Context Version Conflict Inspection**: Ensure that conflicting historical versions do not coexist within the final prompt context;
+5. **Model Attribution Assessment**: Verify that the LLM's generated response strictly adheres to the supplied context evidence.
 
 ```text
-dense   = pgvector.cosine(query, candidate_k)
-lexical = mysql.keyword_cjk(query, identifiers, candidate_k)
-fused   = reciprocal_rank_fusion(dense, lexical)
-ranked  = exact_phrase_identifier_version_freshness_boost(fused)
-context = merge_adjacent(dedupe(ranked), top_k)
+Diagnostic Flow: Structural Integrity -> Candidate Recall -> Fusion Weighting -> Version Consistency -> Model Attribution
 ```
 
-Reciprocal Rank Fusion works on rank positions rather than pretending that cosine and lexical scores are directly comparable. Small reranking boosts then favor exact phrases, identifiers, title matches, newer versions, and fresher imports. These are bounded corrections, not rules that replace relevance.
+## Structure-Aware Chunking and Provenance Tracking
 
-The dual path also improves resilience. If vector retrieval fails temporarily, lexical candidates still produce evidence; if the lexical store is unavailable, dense retrieval can still answer. Hybrid retrieval improves both average quality and graceful degradation.
+Naively slicing text using fixed-character windows breaks semantic coherence and detaches section headings from body paragraphs. The upgraded implementation uses a structure-aware chunking algorithm: it prioritizes Markdown headings, hierarchical chapter titles, numbered lists, double-newline paragraphs, and sentence boundaries. Fixed-window slicing is used only as a fallback when a single structural block exceeds length thresholds.
 
-## Fresh knowledge requires explicit lifecycle data
-
-The most dangerous knowledge base is not an empty one. It is one containing three authoritative-looking but contradictory versions. Similarity alone does not understand draft, superseded, expired, or effective next month.
-
-The retrieval layer now uses lifecycle metadata:
-
-| Field | Default query behavior |
-| --- | --- |
-| `status` | include active, published, or current documents |
-| `effectiveFrom` | exclude rules that are not yet effective |
-| `effectiveTo` | exclude expired knowledge |
-| `supersededBy` | exclude a version replaced by another document |
-| `version` | gently prefer newer versions among similarly relevant candidates |
-
-Administrators can include inactive material for diagnostics, but ordinary users should not have to resolve version conflicts. The next operational step is to automate superseding old documents and schedule reconciliation for expired records and orphan vectors. Updating knowledge is as important as searching it.
-
-## Follow-up questions need retrieval context
-
-A chat model can understand “that rule,” but the retriever only sees the current string. After “what is the refund deadline?”, the follow-up “who does that rule apply to?” is a weak standalone embedding.
-
-For clearly referential follow-ups, the cockpit now prepends the latest user question to the retrieval query while leaving the original question unchanged for generation:
+Every chunk retains its hierarchical heading path as explicit metadata:
 
 ```text
-What is the refund deadline?
-Follow-up: Who does that rule apply to?
+Heading Path: Corporate Policies > After-Sales Support > Refund Approval Standards
+Chunk Content: Refund requests must be submitted within seven days of receipt, accompanied by order numbers and payment receipts.
 ```
 
-This conservative rewrite avoids asking a model to paraphrase every query. Once a representative evaluation set exists, a structured small-model rewriter can be compared against the original query with recall@k instead of being trusted by intuition.
+When a chunk is retrieved independently into top-k candidates, the attached path ensures the language model retains immediate context of the underlying rule. Chunks are deduplicated via content hashing prior to storage. When adjacent chunks from the same document receive high relevance scores during retrieval, the context builder dynamically merges them and strips overlapping text to maximize prompt efficiency.
 
-## MCP tools and the knowledge base have different jobs
+For data governance, the system records comprehensive provenance metadata: `source` (file path), `sourceType` (MIME type), `parser` (extractor version), `ingestedAt` (timestamp), `contentHash` (SHA-256), and `chunkStrategy` (chunking algorithm version).
 
-The knowledge base serves stable, citable facts. MCP tools serve live weather, maps, calculation, and business queries that require execution or current state. Stale weather should not masquerade as a document, and a policy should not require a live tool call on every question.
+## Hybrid Dense + Keyword Retrieval with RRF Fusion
 
-The model may now plan only tools explicitly selected in the interface. “Tools enabled, none selected” means no capability is exposed; it no longer grants an implicit weather tool. The host validates calls against MCP schemas, bounds execution steps, records observations, and returns a trace. The model plans inside the authorized catalog rather than inventing capabilities.
+Dense embeddings excel at capturing conceptual similarity and semantic paraphrasing, but struggle with exact identifiers (e.g., contract codes `CN-2026-0818`, SKUs, and error codes). Conversely, lexical keyword search excels at token precision but cannot generalize across synonyms.
+
+The cockpit executes a dual-track retrieval strategy:
 
 ```text
-user selection -> tool catalog/schema -> model plan -> host validation/execution -> observations -> answer
+dense_candidates   = pgvector.cosine_search(query_vector, candidate_k)
+keyword_candidates = mysql.lexical_search(query_tokens, candidate_k)
+fused_ranked       = reciprocal_rank_fusion(dense_candidates, keyword_candidates, k=60)
+final_ranked       = apply_freshness_and_exact_match_boost(fused_ranked)
+context_chunks     = merge_adjacent_chunks(deduplicate(final_ranked), top_k)
 ```
 
-This is the distinction between function calling as a demo and an auditable tool pipeline.
+Candidate sets are merged using **Reciprocal Rank Fusion (RRF)**. Because RRF evaluates relative ranks rather than disparate, unnormalized distance scores, it demonstrates high parameter robustness. On top of RRF scores, the system applies calibrated boosts for exact phrase matches, business entity identifiers, heading matches, and active document versions.
 
-## A retrieval lab closes the tuning loop
+This hybrid architecture also acts as a built-in redundancy mechanism: if the vector database experiences latency or outages, keyword search maintains baseline Q&A capabilities, and vice versa.
 
-Previously, retrieval was hidden behind the final chat response. When an answer was poor, logs had to reveal whether recall was wrong or the model misused correct evidence. The Knowledge page now includes a Retrieval Lab: select a knowledge base, enter a question, and inspect the real Hybrid + RRF order, scores, excerpts, and full evidence. Its protected endpoint reuses the production retrieval path instead of maintaining a separate test implementation.
+## Knowledge Lifecycle and Temporal Metadata Governance
 
-Visibility is only the beginning. A compact golden set should record the allowed knowledge bases, expected document or passage, key fact, and whether the task should invoke a tool. Each change to chunking, embeddings, fusion weights, or lifecycle rules should compare:
+A common failure mode in corporate knowledge management is the coexistence of multiple conflicting document revisions. Semantic similarity alone cannot discern whether a document is in "Draft", "Archived", or "Effective" status.
 
-- `Recall@k` for candidate coverage;
-- `MRR` for how early the first correct passage appears;
-- citation correctness for whether claims are directly supported;
-- stale/conflicting-hit rate;
-- p50/p95 latency and candidate volume.
+The system embeds temporal and lifecycle governance into chunk-level metadata:
 
-“No evidence” must be measured too. An honest empty result is more useful than fluent text assembled from irrelevant chunks. The Retrieval Lab therefore points an empty query toward document status, effective dates, metadata, and chunk content instead of immediately increasing top-k.
+| Metadata Field | Type | Query Filter Rule |
+| --- | --- | --- |
+| `status` | String | Production Q&A strictly enforces `status IN ('active', 'published')` |
+| `effectiveFrom` | Timestamp | Documents with future effective dates are excluded from default search |
+| `effectiveTo` | Timestamp | Expired policies are filtered out of standard retrieval queries |
+| `supersededBy` | String | Historical versions superseded by newer releases are pruned |
+| `version` | String | When candidates score closely, newer versions receive ranking boosts |
 
-## The practical conclusion
+Administrators can configure automated version supersession workflows and schedule background reconciliation tasks to clean orphan chunks and expired documents.
 
-The central asset in enterprise RAG is not the vector database. It is a maintainable system for producing knowledge and learning from retrieval failures. Better models improve reasoning and expression, but they do not repair broken parsing, missing access boundaries, expired policies, or a bad candidate set.
+## Conversational Coreference Resolution and Query Rewriting
 
-My preferred implementation order is now:
+In multi-turn dialogues, follow-up queries frequently contain strong pronouns (e.g., Turn 1: "What is the refund window?"; Turn 2: "Does this rule apply to international orders?"). Embedding the second query directly leads to poor retrieval due to missing subject context.
 
-1. make structure, provenance, and lifecycle traceable;
-2. combine semantic and lexical retrieval and expose candidate behavior;
-3. build regression metrics from real questions;
-4. only then compare embeddings, rerankers, and generation models.
+The system uses a deterministic query stitching technique: upon detecting pronouns or incomplete predicates, it appends the core subject from the preceding user turn to form an expanded search query:
 
-This order lets every improvement name the layer it changed and every regression identify a likely cause. The current implementation and its Retrieval Lab are available in the [Enterprise AI Cockpit](/smartCockpit/).
+```text
+Turn 1: What is the refund approval window?
+Turn 2: Does this rule apply to international orders?
+Synthesized Query: What is the refund approval window? Does this rule apply to international orders?
+```
+
+The synthesized text is utilized solely for vector and keyword search; the generation model continues to receive the pristine conversation history, avoiding prompt drift.
+
+## Model Context Protocol (MCP) Tool Governance
+
+The architecture strictly separates static knowledge base content from dynamic MCP tool execution:
+- **Knowledge Base**: Serves static, citeable documentation, standards, and institutional records;
+- **MCP Tools**: Handles dynamic state queries (e.g., live weather, AMap geolocation, time APIs, dynamic SQL queries, and transactional actions).
+
+Tool governance enforces the principle of least privilege: models are only permitted to invoke tools explicitly enabled by the user in the UI. Backend hosts validate tool schemas, enforce execution step limits, and log full execution traces.
+
+```text
+User Authorization -> Tool Directory / Schemas -> Model Planning -> Host Validation & Sandbox Execution -> Observation -> Final Synthesis
+```
+
+## Retrieval Lab and Quantitative Evaluation Loop
+
+To enable continuous retrieval tuning, the console features a built-in Retrieval Lab. Engineers and operators can select a target knowledge base, submit test queries, and inspect Hybrid + RRF rankings, similarity scores, chunk previews, and metadata payloads.
+
+The system tracks key retrieval metrics against a benchmark Golden Dataset:
+
+- **Recall@k**: Percentage of queries where ground-truth chunks appear in top-k candidates;
+- **MRR (Mean Reciprocal Rank)**: Average reciprocal rank of the first relevant chunk;
+- **Citation Precision**: Proportion of claims in generated answers directly backed by citations;
+- **Version Conflict Rate**: Frequency of expired or conflicting chunks slipping into prompts;
+- **p50/p95 Retrieval Latency**: Performance monitoring across parsing, search, and reranking.
+
+When no high-confidence chunks are found, the system explicitly returns a "no relevant evidence" state, prompting operators to review document metadata or ingest missing information, preventing hallucinated responses.
+
+You can experience the upgraded retrieval architecture in the [Enterprise AI Cockpit](/smartCockpit/).
 
 ## References
 
-- [Anthropic: Contextual Retrieval](https://www.anthropic.com/engineering/contextual-retrieval)
-- [pgvector: official Hybrid Search guidance](https://github.com/pgvector/pgvector#hybrid-search)
-- [Apache Tika Parser documentation](https://tika.apache.org/2.7.0/parser.html)
-- [Model Context Protocol: Tools specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)
+- [Anthropic: Contextual Retrieval Engineering Guide](https://www.anthropic.com/engineering/contextual-retrieval)
+- [pgvector Documentation & Hybrid Search Guidelines](https://github.com/pgvector/pgvector#hybrid-search)
+- [Apache Tika Content Extraction Documentation](https://tika.apache.org/2.7.0/parser.html)
+- [Model Context Protocol (MCP) Specification](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)

@@ -1,152 +1,158 @@
 ---
-title: Cherry-Pick Branch Governance for Multi-Site Deployments
-excerpt: When the same system ships to several factories separately, reusing a feature across sites by merging branches into one another eventually spirals out of control. My rule is to let cherry-pick travel a single path — every feature first collapses into one clean commit on the mainline, then gets picked into whichever site needs it.
+title: Branch Governance with Cherry-Pick in Multi-Factory Deployments
+excerpt: Managing multi-site code deployments: using single-path cherry-pick workflows to distill features into atomic trunk commits before promoting to factory deployment branches.
 ---
 
-Shipping the same system to several factories separately is something I’ve refined over a lot of real projects. The same Java + Vue codebase has to land at different sites, and each factory keeps its own deployment branch with different device addresses, line configurations, and database scripts. Yet features are heavily shared — a logging platform one factory has polished is something factories B and C will probably want too.
+When deploying a unified enterprise system (based on Java + Vue architecture) across multiple manufacturing plant sites, each facility maintains a dedicated production branch containing plant-specific PLC/hardware addresses, production line routing, and localized SQL initialization scripts. Simultaneously, core platform capabilities (such as unified logging systems and analytical reporting) frequently need to be shared across multiple facilities.
 
-The whole problem hides in that word, *want*. When you move a feature from one factory to another, the laziest idea is to merge the branch across — and that’s exactly the move that plants landmines. This post is about the discipline I eventually settled on: for reusing features across sites, let `cherry-pick` travel a single path.
+Executing `git merge` directly between factory deployment branches introduces serious risks, as site-specific configurations and unvetted local adaptations can inadvertently bleed into other production environments. To ensure production stability and code traceability, this article outlines a two-stage branch governance model built upon disciplined `cherry-pick` workflows.
 
-## First, sort out the three kinds of branches
+## Branch Hierarchy and Role Definitions
 
-Before touching anything, you have to admit the branches in this repo are not peers. They come in three kinds:
+Within a multi-branch repository, branches fulfill distinct operational roles:
 
-- **The mainline `prod_main`**: holds the clean, reusable feature commits every factory can share. It maps to no single site — it’s the clearing house for shared work.
-- **Deployment branches `prod_factory_a`, `prod_factory_b`, …**: what each factory actually runs on-site, carrying its own site-specific config.
-- **Retired root branches** (an old `main`, `prod`, and the like): no longer a baseline for development, picking, or release — kept only as history.
+- **Common Trunk Branch (`prod_main`)**: Houses standardized features and reusable components, serving as the clean integration baseline for all shared code;
+- **Factory Deployment Branches (`prod_factory_a`, `prod_factory_b`, ...)**: Represent the active production runtime for each specific site, holding environment-specific configurations and localized adapters;
+- **Archived Base Branches**: Legacy root branches preserved strictly for historical reference, not used for daily development or releases.
 
-One trap deserves its own sentence: some deployment branches have `main` in the name (say a factory’s `factory_c/main`). It is **not** the root branch and **not** the mainline — it’s just that factory’s deployment branch. Names mislead; roles don’t.
+The governing rule for cross-site feature reuse is: **Never merge factory deployment branches directly into one another. All shared capabilities must first be consolidated into a single atomic commit on `prod_main`, and subsequently cherry-picked into target factory branches.**
 
-The whole workflow in one line: **a cross-site feature travels a single path — source deployment branch → (collapsed into one commit on the mainline) → target deployment branch.**
-
-## The one rule: deployment branches never merge into each other
-
-The most intuitive — and most dangerous — move is to merge the branch that carries the finished feature straight into the target site:
-
+```text
+Source Factory Branch (prod_factory_a)
+       │
+       ▼ (cherry-pick -n multiple commits & clean site-specific code)
+Common Trunk (prod_main) ───> Consolidated into 1 atomic commit
+       │
+       ▼ (cherry-pick -x with provenance tracking)
+Target Factory Branch (prod_factory_b)
 ```
-# Anti-pattern, don't do this
+
+## Prohibiting Direct Cross-Branch Merges
+
+In multi-site architectures, the following pattern represents a critical operational risk:
+
+```bash
+# High-risk anti-pattern: Never merge directly between factory branches
 git switch prod_factory_b
 git merge origin/prod_factory_a
 ```
 
-The moment you do, factory A’s device calls, site-specific config, and init scripts pour into factory B alongside the one feature you actually wanted. It compiles fine right then; the problem usually surfaces weeks later, on-site, when a hard-coded device address turns out to have hitched a ride. A deployment branch represents *what this factory is actually running right now* — branches like that simply should not merge into each other.
+Direct merging imports Factory A's hardware endpoints, local middleware hosts, and site-specific SQL updates directly into Factory B. These pollutions often pass compilation unnoticed, only to cause runtime hardware connection failures in production.
 
-The correct path is two stages: first pick, filter, and collapse the source factory’s commits into one clean commit on the mainline; then let the target factory pick that single commit.
+The standardized two-stage workflow decouples feature abstraction from local adaptation:
 
-![Two-stage flow: source deployment branch → (cherry-pick -n several commits + filter) → prod_main one clean commit → (cherry-pick -x) → target deployment branch](/images/cherry-pick-flow.svg)
+![Two-stage workflow: source factory branch → (cherry-pick -n + filter) → prod_main single clean commit → (cherry-pick -x) → target factory branch](/images/cherry-pick-flow.svg)
 
-## One feature, one commit on the mainline
+## Atomic Feature Consolidation on Trunk
 
-In its home factory a feature usually grew piecemeal: create the module, add a service and mapper, tweak a controller, patch some config along the way, and probably mix in a call that only that factory needs. Copying that commit history is pointless and unreusable.
+Feature development on a source factory branch typically accumulates multiple fragmented commits (initial implementation, local debugging, interface tweaks, etc.). When promoting this work to the common trunk, the goal is to extract the functional logic and consolidate it into a single clean commit.
 
-So when it enters the mainline, I don’t carry the history — only the result:
+The operational sequence is:
 
-```
+```bash
 git switch prod_main
-git cherry-pick -n <source-commit-1> <source-commit-2> <source-commit-3>
+git pull --ff-only origin prod_main
+# Load multiple commits from the source branch into the staging area without committing
+git cherry-pick -n <source_commit_1> <source_commit_2> <source_commit_3>
 ```
 
-`-n` is `--no-commit`: it lays all those changes out in the working tree without rushing to commit, handing the *which of this actually stays?* decision back to me. Then comes the part that really takes time — reading the diff file by file, rolling back anything site-specific, deleting directories that don’t belong, trimming the dependency list to the minimum wiring. Only once it’s filtered and the build and tests pass do I fold it into one commit:
+Using `cherry-pick -n` (`--no-commit`) stages file changes directly in the working tree, allowing granular inspection:
+1. Revert all plant-specific configuration files and hardware client classes;
+2. Remove unverified peripheral scripts and test mocks;
+3. Clean Maven `pom.xml` descriptors, retaining only minimal module references and dependencies;
+4. Execute unit tests and local builds;
+5. Commit the final clean state as a single atomic commit:
 
-```
+```bash
 git commit -m "feat(common): add log platform"
 ```
 
-At that point the feature has exactly one clean commit hash on the mainline. The payoff is concrete: the branch count stops ballooning; which factory adopted the feature and when is a matter of reading the mainline history; and rolling back is rolling back that one commit.
+This atomic structure keeps trunk history linear and clean, simplifying downstream cherry-picks and future rollbacks.
 
-## Stage one: from factory A onto the mainline
+## Stage 1: Distillation from Source Factory to Trunk
 
-Before I start, I have a 30-second habit: `git status` to confirm a clean tree, `git fetch origin --prune` to refresh remotes, confirm I’m standing on `prod_main` and not some root branch, and finally **note the current `prod_main` SHA** as a rollback point.
+When promoting a capability from a source factory branch to the trunk:
 
-Then switch to and update the mainline:
+1. **Workspace Verification**: Ensure a clean working tree, fetch remote references, and record the current `prod_main` HEAD SHA as a rollback point;
+2. **Commit Audit**: Review the source branch commit log and file diffs to map out affected files and dependency boundaries:
 
-```
-git fetch origin --prune
-git switch prod_main
-git pull --ff-only origin prod_main
-```
-
-On the source branch, work out exactly which commits to carry — don’t judge by commit titles, read the file list and diff:
-
-```
+```bash
 git log origin/prod_factory_a --oneline --decorate
-git show --stat <source-commit>
+git show --stat <source_commit_sha>
 ```
 
-Check three things: which files these commits touched, whether any factory-specific device address or interface tagged along, and whether the commits depend on one another. Once that’s clear, `cherry-pick -n` all of them into the working tree in order, then filter — a step where a GUI diff is easiest: keep what’s reusable, roll back factory-specific files, delete new directories that shouldn’t be here, and leave only the necessary module declarations and dependencies in the POMs. Run the build and tests, confirm the working tree holds only what this feature should, then fold it into that **one** commit and push.
+3. **Change Filtering**: Execute `cherry-pick -n` and use IDE visual diff tools to discard site-specific logic, ensuring only generic code remains;
+4. **Validation and Push**: Run module-level builds and test suites before pushing to remote `prod_main`.
 
-## Stage two: factory B picks from the mainline
+## Stage 2: Selective Promotion to Target Factory Branches
 
-The second stage is far lighter, because the mainline already holds a filtered, tested, clean commit:
+Once the feature is established as a clean commit on `prod_main`, promoting it to target factory branches is straightforward:
 
-```
+```bash
 git switch prod_factory_b
 git pull --ff-only origin prod_factory_b
-git cherry-pick -x <mainline-feature-SHA>
+# Use -x flag to preserve source commit provenance
+git cherry-pick -x <trunk_feature_commit_sha>
 ```
 
-`-x` writes the source commit hash into the new commit message, so the feature’s origin stays one glance away. If factory B needs extra adaptation, **make that a separate commit** — never fold it back into the shared mainline commit. Build, test, then push.
+The `-x` flag automatically appends `(cherry picked from commit ...)` to the commit message, establishing clear traceability. If Factory B requires local configuration adjustments or specialized beans, **these must be committed as a separate, distinct adaptation commit**, preventing local overrides from polluting trunk artifacts.
 
-## A full case: moving the logging platform to factory B
+## Real-World Case: Promoting the Log Platform to Factory B
 
-Abstractions feel hollow, so here’s a real example I’ve actually done (details anonymized).
+Consider a logging module developed at Factory A that needs to be deployed to Factory B. The original changes are spread across three commits:
 
-Factory A built a logging platform on-site, and now factory B wants it too. The relevant changes are scattered across three commits on the source branch:
-
-| Source commit (example) | What it does | Why it can’t be carried commit-by-commit |
+| Source Commit | Commit Content | Non-Reusable Modifications Included |
 |---|---|---|
-| `a1c9f0e` | Consolidates log management into its own module | Also moved several old module files and touched multiple POMs |
-| `b2d47a1` | Builds the module’s core | Mixes in an unfinished starter and factory-A-specific calls |
-| `c3e8b90` | Moves service, mapper, entities into the module | Also touches the thread pool, on-site services, and old module files |
+| `a1c9f0e` | Core logging module structure | Relocated legacy business files, modified root POM |
+| `b2d47a1` | Ingestion service and configurations | Contained an unfinished starter and Factory A hardware hooks |
+| `c3e8b90` | Query controllers and mappers | Altered local thread pools and site-specific SQL scripts |
 
-So you `-n` them together first, then filter. I list up front what goes into the mainline and what stays firmly out:
+To migrate safely, establish an explicit file inclusion whitelist:
 
-![Case filtering: into prod_main go the log module and minimal POM wiring; excluded are the standalone starter, factory-specific calls, peripheral changes, and frontend scripts](/images/cherry-pick-selection.svg)
+![Case study selection: entering prod_main is the log module and minimal POM wiring; excluded are the standalone starter, site-specific calls, peripheral changes, and frontend scripts](/images/cherry-pick-selection.svg)
 
-**Allowed into `prod_main`**: the module directory `log-platform/**`, its two backend controllers, the module’s config class, and the minimal module declarations and dependency wiring across the three POMs.
+- **Permitted for `prod_main`**: `log-platform/**` directory, generic controllers, module configuration classes, and minimal root POM module wiring;
+- **Strictly Excluded**: `log-platform-starter` module, Factory A work order reporting hooks, thread pool overrides, frontend routing, and local schema DDL scripts.
 
-**Firmly excluded**: the standalone `log-platform-starter` module (and its `<module>` declaration in the root POM), factory A’s work-order and device calls, unapproved peripheral changes like the thread pool, and the frontend pages and database init scripts.
+Execution commands:
 
-Stage one — collapse the three commits onto the mainline, filter, build, and fold into one commit:
-
-```
+```bash
 git switch prod_main
 git pull --ff-only origin prod_main
 git cherry-pick -n a1c9f0e b2d47a1 c3e8b90
 git restore --staged .
-# In the IDE: roll back files outside the whitelist, delete extra dirs, trim POMs to minimal wiring
-git status --short          # confirm only whitelisted content remains
+# Discard non-whitelisted files and clean POM wiring
+git status --short
 mvn -pl log-platform -am clean test
 git add log-platform
-git add -p pom.xml          # take only the POM fragments you need
+git add -p pom.xml
 git commit -m "feat(common): add log platform"
 git push origin prod_main
 ```
 
-Note the SHA this produces — that’s the logging platform’s one and only shared commit on the mainline.
+Promotion to Factory B:
 
-Stage two — factory B picks that single commit, runs the tests, then pushes:
-
-```
+```bash
 git switch prod_factory_b
 git pull --ff-only origin prod_factory_b
-git cherry-pick -x <mainline-SHA-from-above>
+git cherry-pick -x <trunk_commit_sha>
 mvn -pl log-platform -am clean test
 git push origin prod_factory_b
 ```
 
-The three branches end up exactly where they should: factory A keeps its original commits and adaptations; the mainline gains one clean logging-platform commit; factory B’s branch has picked that single commit, plus its own adaptation commit if needed. When factory C wants it later, that’s just picking the same one commit from the mainline again.
+## Conflict Resolution, Rollbacks, and Commit Standards
 
-## Conflicts and rollbacks
+### 1. Conflict Resolution
+When conflicts occur during `cherry-pick`, resolve them via standard 3-way merge tools, stage resolved files with `git add`, and proceed with `git cherry-pick --continue`. To abort the operation cleanly, run `git cherry-pick --abort`.
 
-`cherry-pick` hitting a conflict is routine. Resolve it, `git add`, then `git cherry-pick --continue`; to abandon the pick entirely, `git cherry-pick --abort` returns you to a clean state.
+### 2. Rollback Standards
+- **Unpushed Local Rollback**: Execute `git reset --hard <pre_operation_sha>` followed by `git clean -fd` to remove untracked artifacts;
+- **Pushed Trunk Rollback**: Never force-push (`--force`) over shared trunk history. Instead, use `git revert <commit_sha>` to create an explicit inverse commit.
 
-Backing out a mistake splits two ways. **Not pushed yet**: `git reset --hard <the SHA you noted first>`, then `git clean -nd` to preview and, once you’re sure, `git clean -fd` to clear the extra files — which is exactly why I always save a SHA before starting. **Already pushed to the mainline**: don’t force-push and don’t rewrite shared history; make an honest reverse commit with `git revert <bad-commit>`. If other factories already picked the bad commit, each of them reverts too.
+### 3. Commit Message Conventions
+Structured prefixes clarify commit scope:
+- `feat(common): ...`: Reusable trunk features
+- `fix(common): ...`: Common bug fixes on trunk
+- `feat(factory-a): ...`: Site-specific adaptations
 
-## Commit messages that stay traceable
-
-I classify commit messages by purpose so the mainline history explains itself: shared features as `feat(common): ...`, a factory’s adaptation as `feat(factory-b): ...`, shared fixes as `fix(common): ...`. No more “update code” or “tweak feature” — the kind of message nobody can decode a month later.
-
-## To close
-
-The expensive part of working across sites was never writing the feature. It’s failing, months later, to explain why a particular piece of code is even in this factory. Used well, `cherry-pick` is really a discipline: keeping every shared feature to a single clean, traceable, one-command-revertible commit on the mainline is just saving your future self the cost of that explanation.
+This disciplined Cherry-pick workflow guarantees clean separation between shared assets and localized runtime environments, significantly reducing maintenance overhead across distributed manufacturing deployments.

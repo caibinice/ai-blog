@@ -1,109 +1,95 @@
 ---
-title: Traceable Data Engineering for Cross-Border Trend Reports
-excerpt: Cross-border product selection isn’t about finding a screenshot of a hot-seller list—it’s about organising sources, trends, exchange rates, costs and AI judgements into decision materials you can rerun, and hold accountable, every day.
+title: Traceable Data Architecture for Cross-Border Trend Intelligence
+excerpt: Integrating multi-source data ingestion, deterministic category normalization, and a profit waterfall model to deliver an auditable daily decision-support system.
 ---
 
-When selecting products for cross‑border e‑commerce, the most dangerous state is not having no information at all, but having plenty of information without being able to explain where it came from: a short video suddenly goes viral, a platform leaderboard looks hot, a supplier claims a certain category is growing. All of these may hold value, but if you can’t answer “when, from where and how was this calculated”, they are difficult to turn into a stable basis for decisions.
+In cross-border e-commerce product selection and market trend analysis, relying solely on isolated bestseller rankings or scattered media claims often leads to untraceable data sources, undefined metrics, omitted currency volatility, and disconnected fulfillment costs. Without clear tracking of timestamps, raw origins, and gross margin calculations, such information fails to serve as a reliable basis for inventory procurement and advertising spend.
 
-Worse, this kind of “feeling” tends to get amplified as it spreads: a screenshot gets forwarded, the framing gets simplified, the timestamp gets dropped, and eventually nobody can say which market, which day or which price band it originally came from. By the time you actually stock inventory and buy ads, the basis has quietly gone stale.
+The Cross-Border Trend Reporting system addresses these issues by aggregating fragmented cross-platform data into a daily, reproducible report, ensuring every product recommendation can be traced back to its raw source, reference exchange rates, and itemized cost breakdown.
 
-The goal of the cross‑border trends report project is to turn that scattered “feeling” into a daily digest that is traceable and repeatable—where every recommendation can be traced back to its source, and every number back to how it was calculated.
+## Multi-Source Ingestion and Adapter Layer Architecture
 
-## Start with multi‑source collection, not with AI
+The system integrates Google Trends RSS feeds, public WooCommerce product catalogs, Frankfurter live exchange rates, and credential-based connectors for Rakuten, Yahoo Shopping, and Rainforest. For every candidate product, the system persists its source URL, original title, image assets, target market, currency, and ingestion timestamp to enable end-to-end data auditing.
 
-The system combines Google Trends RSS, public WooCommerce product catalogues, the Frankfurter exchange rate, and sources like Rakuten, Yahoo Shopping and Rainforest that are enabled based on credentials. Every candidate product keeps its source link, original title, image, market, currency and collection timestamp. Those fields are the foundation of everything traceable later; drop one and the record only “looks like” evidence.
+Because data providers vary widely in protocol formats, authentication schemes, and rate limits, the ingestion layer encapsulates these differences behind a unified `SourceAdapter` interface. Authentication signatures, pagination, and schema mappings are handled internally, exposing only standardized batch retrieval methods to upper-level orchestration and deduplication logic.
 
-The sources differ a lot in shape: some are RSS, some are REST, some need credentials and rate limits. So the first job of the collection layer is adaptation: each source is wrapped as a uniform `SourceAdapter` that exposes a single action—“fetch a batch of candidates”—while handling auth, pagination and field mapping internally. The scheduling, deduplication and conversion above it never have to care about any one platform’s protocol.
+Task scheduling is driven by dynamic database configurations rather than hardcoded intervals. Deduplication uses a composite idempotent key—`source + external_product_id + target_market`—preventing duplicate entries within the same cycle from distorting ranking weights.
 
-For scheduling I use fixed-frequency dynamic tasks rather than hard-coding cycles in code—when a source slows down or is temporarily disabled, I change config, not a release. Deduplication uses “source + external ID + market” as an idempotency key, so products collected twice on the same day are merged, not stacked, and the same item never shows up twice in a ranking.
-
-Whether a collection run “fully succeeded” must be recorded, not guessed. Each run writes an audit entry: start time, source, candidate count, success or failure, and the reason for failure. If one source is down today, the daily report won’t pretend it’s still there—it will clearly show that source as absent.
+Every ingestion run creates an explicit audit record (`CollectionRun`), capturing start time, source name, item count, status (SUCCESS / PARTIAL / FAILED), and diagnostic notes. When a source encounters network timeouts or credential errors, the daily report explicitly flags the missing status, ensuring complete data transparency.
 
 ```text
-CollectionRun
-  ├─ source        Rakuten / Yahoo / WooCommerce ...
-  ├─ startedAt     when the run began
-  ├─ fetched       candidates retrieved this run
+CollectionRun Audit Entity
+  ├─ source        Data provider (Rakuten / Yahoo / WooCommerce, etc.)
+  ├─ startedAt     Ingestion trigger timestamp
+  ├─ fetched       Candidate items retrieved in this batch
   ├─ status        SUCCESS | PARTIAL | FAILED
-  └─ note          failure reason / rate limit / missing credentials
+  └─ note          Diagnostic reason / Rate limit notes / Credential status
 ```
 
-The Spring Boot backend handles data‑source adapters, scheduling, deduplication, currency conversion and profit modelling; MySQL stores trend signals, the product pool, daily reports, market configurations, collection audit records and admin permission data. The Vue frontend is split into a public product‑selection cockpit and a standalone admin console. I want the system to answer at any moment: exactly which source today’s recommendation comes from, which exchange rate was used, how shipping and platform fees were calculated, and whether the collection tasks completed successfully.
+The backend is built with Spring Boot, managing source adaptation, scheduling, deduplication, currency conversion, and the profit margin engine; MySQL stores trend signals, product pools, historical reports, market configurations, and audit logs; the Vue 3 frontend provides both an analytical cockpit and an administrative back-office.
 
-![Pipeline from multi-source collection to a traceable daily report](/images/cross-border-trends-pipeline.svg)
+![Pipeline overview: from multi-source collection to a traceable daily report](/images/cross-border-trends-pipeline.svg)
 
-## AI is a standardisation layer, not a data source
+## LLM-Driven Normalization with Deterministic Fallbacks
 
-Product titles from different platforms often mix brands, specs, marketing phrases and language differences: the same wireless earbuds might appear once as a long promotional string and elsewhere as just a model number. DeepSeek is mainly used here for title standardisation, category grouping and explaining candidate ranking—it doesn’t create “hot products” out of thin air. It only ever processes data that has already been collected; it never manufactures data.
+Product listings across different platforms are frequently cluttered with marketing buzzwords, brand abbreviations, and multilingual text. The system employs large language models (such as DeepSeek) for title normalization, standardized category mapping, and ranking rationales, operating exclusively on persisted raw data without fabricating synthetic products.
 
-When the large language model is unavailable, source data can still enter the system, which falls back to deterministic Chinese categories and rules. The fallback isn’t “degrade to unusable”; it swaps in a predictable, deterministic path: map keywords to fixed categories, sort by known rules. The result is stable and reproducible—it just lacks the natural-language polish.
+To maintain high availability, a complete fallback mechanism is implemented: if LLM calls time out, exceed rate limits, or encounter exceptions, the pipeline automatically routes through local keyword dictionaries and regex rules for category classification, applying deterministic weighted sorting.
 
 ```text
-Standardise one candidate:
-  if LLM available:
-      title → normalised title, unified category, ranking rationale
-  else (timeout / error / not configured):
-      title → keyword rules mapped to a deterministic category
-      rank  → existing weight rules, no model call
-  both paths write to the same product table, tagged normalizedBy = ai | rule
+Candidate Normalization Flow:
+  IF LLM service is healthy:
+      Raw Title → Standardized Title, Category Alignment, Ranking Rationale
+  ELSE (Timeout / Error / Unconfigured):
+      Raw Title → Keyword Dictionary Classification
+      Ranking   → Deterministic Weighted Rules
+  Both execution paths write to the product database with normalizedBy = ai | rule
 ```
 
-This design avoids a common illusion: as long as the AI output is fluent enough, the data must be real. Fluency is a language model’s default ability; it has nothing to do with whether the data is correct. I’ve seen too many “professional-looking” analyses that fall apart once you trace them down to a source that was never there. For me, an AI judgement must always be attached to a known source—the model can help organise and compare, but it can’t replace the evidence gathered from collection. So every candidate records whether it was standardised by AI or by rule, which lets me tell a collection problem apart from a processing one.
+This dual-track architecture guarantees that core business flows remain operational independently of external AI APIs. Storing the `normalizedBy` property (`ai` vs. `rule`) facilitates quality auditing and performance comparison.
 
-## Profit modelling is closer to a real decision than popularity rankings
+## Profit Waterfall Model and Multi-Market Simulation
 
-Just because a product is hot doesn’t mean it’s worth selling. The daily report feeds purchase price, exchange rate, shipping, platform fees, payment fees, taxes and advertising costs into the same profit calculation, then compares selling prices and gross margins across markets. Popularity only answers “is anyone looking”; profit answers “how much is actually left after the sale”.
+Product popularity alone does not indicate profitability. The daily report incorporates a profit waterfall model that accounts for purchase costs, FX gains/losses, international shipping, marketplace commissions, payment gateway fees, import tariffs/taxes, and estimated customer acquisition costs (CAC).
 
-The full formula is really just one long subtraction:
+The gross margin calculation is formulated as:
 
 ```text
-gross margin = sell price
-             − purchase cost
-             − FX conversion loss
-             − shipping
-             − platform fee
-             − payment fee
-             − tax
-             − advertising cost
-margin rate  = gross margin / sell price
+Gross Profit       = Listing Price
+                   − Purchase Cost
+                   − Currency Conversion Variance
+                   − International Freight
+                   − Marketplace Commission
+                   − Payment Gateway Fees
+                   − Import Tariffs & VAT
+                   − Estimated CAC per Unit
+Gross Margin Rate  = Gross Profit / Listing Price
 ```
 
-![Profit waterfall: subtracting every cost from the sell price down to gross margin](/images/cross-border-trends-profit.svg)
+![Profit waterfall: deducting costs step-by-step from selling price to reach gross profit](/images/cross-border-trends-profit.svg)
 
-Drawn as a waterfall it’s clearer: the sell price is the full bar on the left, each cost is a step downward, and what’s left at the far right is the margin. What actually eats the profit is often not the most visible purchase cost, but the platform, payment and advertising fees stacked together—each one looks small, but together they can turn a “hot product” into a loss.
+In cross-border scenarios, the profit structure of the same SKU varies significantly across target markets due to local price points, settlement exchange rates, category fee schedules, and customs tariffs. The system supports side-by-side market comparisons:
 
-Put the same product in different markets and every term in that subtraction shifts: the sell price moves with local demand, the FX rate settles daily, platform fees and taxes differ by market rule. So the report does a side-by-side comparison—the same candidate can have one margin rate in market A and a very different one in market B:
-
-| Item | Market A (example) | Market B (example) |
+| Cost Component | Market A (Illustrative) | Market B (Illustrative) |
 | --- | --- | --- |
-| Sell price | 100 | 92 |
-| Purchase + shipping | 52 | 52 |
-| Platform + payment + tax | 18 | 15 |
-| Advertising | 12 | 10 |
-| Margin rate | 18% | 16% |
+| Local Selling Price (Base Equiv.) | 100 | 92 |
+| Procurement + Logistics | 52 | 52 |
+| Platform Fees + Payment + Tax | 18 | 15 |
+| Estimated CAC | 12 | 10 |
+| Estimated Gross Margin | 18% | 16% |
 
-The numbers above are illustrative, meant to show that “same item, different market, different margin structure”—not any measured result.
+All shipping tiers, fee schedules, tax rates, and CAC assumptions are managed as configurable parameters in the administration console. When market conditions shift, recalculations can be triggered immediately, with historical calculations remaining fully traceable.
 
-This model is still an estimate: real return rates, warehousing, inventory turnover and ad bidding will continue to shift the result. But making the assumptions explicit and configurable already takes you a step beyond just staring at sales rankings. Every time freight or fee rates change, the historical reports and calculation parameters can be traced too—if today’s margin differs from last week’s, I can find out whether the FX moved or whether I changed a rate myself.
+## Administrative Controls and Security Auditing
 
-## The admin panel isn’t decoration
+The administration console provides RBAC user management, multi-tenant/market settings, category taxonomy maintenance, data source connection management, and ingestion interval controls. Production deployments enforce JWT authentication with BCrypt password hashing, and all sensitive parameter updates and deletion actions are logged in audit tables.
 
-The admin console supports configuring users, roles, menus, tenants, markets, categories, data sources and collection frequencies. None of this is ornamental: markets and categories define the collection scope, data sources and frequencies define what runs each day and how often, roles and menus define who gets to change any of it. Configuration is behaviour—change one frequency and tomorrow’s report changes.
+## Single-Node Lightweight Engineering Constraints
 
-In production, JWT login is enforced, passwords are hashed with BCrypt, and deletions and configuration changes leave audit records. Why audit deletions too? Because product selection is a chain of judgements: if someone quietly removes a data source or edits a fee rate with no record, the report’s changes become impossible to explain. The point of the audit isn’t to police anyone—it’s to make every change in the calculation traceable in hindsight.
+In a resource-constrained 2GB RAM cloud environment, the system avoids heavy middleware (such as Kafka or distributed caches). Instead, lightweight dynamic schedulers, constrained database connection pools, and controlled single-node concurrency ensure low memory usage and long-term operational stability.
 
-## Restraint on a small server
+## Model Assumptions and Operational Boundaries
 
-On a 2 GB server, I haven’t introduced message brokers, container orchestration or extra caching services. Not because I don’t know their benefits, but because at the current scale I haven’t hit the problems they solve. Dynamic scheduling, idempotent tasks and a small connection pool are enough: the workload is bounded, idempotency makes reruns safe, and a small pool actually keeps the database from being starved of connections.
-
-Adding a broker means raising another component that has to be monitored, can fail, and consumes memory. On a machine with only 2 GB, that cost is real. Complexity is only worth introducing when it solves a clear problem—if collection volume ever crushes the single machine, I can split things async and add a queue then, with real bottleneck data to back the decision instead of architecting on imagination.
-
-## The honesty of an estimate
-
-I want to state this plainly: this report gives you an estimate, not a promise. Real return rates, warehousing costs, inventory turnover and ad bidding all keep changing the final result in places I can’t see. Any one of them can drag a beautiful margin rate back down to earth.
-
-So I’d rather lay the assumptions out in the open than chase a number that “looks certain”. Shipping, fees, tax rates and assumed ad costs are all configurable parameters in the admin panel, not constants buried in code. That has two benefits: anyone can see which assumptions a recommendation rests on, and when reality and the estimate diverge, I can go back and adjust that specific assumption rather than tear down the whole system.
-
-An honest estimate is more useful than a precise illusion.
+The metrics produced by this system represent static simulations based on configured parameters. In practical operations, factors such as return rates, overseas warehousing storage fees, inventory turnover velocity, and real-time ad bidding fluctuations will impact realized profitability. By maintaining transparent, parameterized assumptions, operations teams can continuously calibrate baselines to improve decision precision.
 
 You can see the running cockpit at [/crossBorderTrend/](/crossBorderTrend/). It isn’t a “hot‑product guarantee machine”—it’s a workbench that lays the judgement process out in the open.

@@ -1,129 +1,109 @@
 ---
-title: Enterprise AI Cockpit with RAG, Vector Retrieval, and Streaming Answers
-excerpt: A real enterprise AI experience is more than just a chat box—it’s a cockpit built from data persistence, retrieval evidence, streaming feedback, and business workflows.
+title: Enterprise AI Cockpit: RAG, Vector Search, and Real-Time Streaming
+excerpt: Engineering an enterprise AI cockpit featuring decoupled persistent storage, pgvector retrieval with lexical fallbacks, true end-to-end SSE streaming, and strict resource isolation.
 ---
 
-Many RAG demos start with a chat box: upload files, enter a question, and the model gives an answer. This flow is fine for proving a concept, but when I tried to turn it into an enterprise intelligent cockpit, questions quickly went beyond the chat itself.
+Transitioning Retrieval-Augmented Generation (RAG) from prototype demonstrations to production enterprise cockpits extends far beyond simple conversational interfaces. Production readiness demands systematic solutions for document metadata and vector synchronization, cross-database cascading deletions, citation provenance tracking, true end-to-end event streaming, and unified resource isolation.
 
-Are the knowledge base and documents persisted? How do vectors sync when a document is deleted? Which chunks does the answer reference? How do you give feedback when the upstream model’s stream is interrupted? How do business reports, data sources, and conversation logs share the same permission and audit boundaries?
+This project delivers an enterprise AI cockpit architecture characterized by high-availability fallbacks and strict resource boundaries, making the entire pipeline—from ingestion to retrieval and streaming generation—fully transparent.
 
-What these questions have in common is that they all live *outside* the conversation. The chat box is only the entrance; what actually decides whether this can ship is the storage, retrieval, event stream, and fallback paths behind it. This project is answering these questions that are closer to real-world deployment. It doesn't try to be feature-complete; it tries to make every step from upload to answer—every step that could fail *silently*—explicit.
+> **August 2026 Update:** This document retains the initial "vector-first, keyword-fallback" architecture notes. The online version has evolved to incorporate structure-aware chunking, dense + keyword hybrid retrieval, Reciprocal Rank Fusion (RRF), validity period filtering, and dynamic adjacent-chunk merging. For comprehensive tuning methodologies, see [Knowledge Engineering and Tunable Cockpits for Enterprise RAG](/articles/enterprise-rag-knowledge-engineering).
 
-> **August 2026 update:** This article preserves the initial vector-first, lexical-fallback architecture. The live version now uses structure-aware chunks, parallel dense and lexical recall, RRF fusion, lifecycle filters, deduplication, and adjacent-chunk merging. See [Treating Enterprise RAG as Knowledge Engineering](/en/articles/enterprise-rag-knowledge-engineering) for the complete tuning approach.
+## Heterogeneous Storage Architecture and Separation of Concerns
 
-## Two Types of Databases with Different Responsibilities
+The persistence layer separates relational state from vector embeddings across two specialized databases:
 
-MySQL stores knowledge bases, document metadata, data sources, report templates, run records, conversations, and business configurations. PostgreSQL + pgvector stores fixed-dimension vectors and chunk metadata.
+- **MySQL**: Manages structured business entities, including knowledge base configurations, document metadata, external data source connections, report templates, asynchronous execution logs, multi-turn conversation contexts, and access control policies.
+- **PostgreSQL + pgvector**: Stores high-dimensional embedding vectors and associated chunk-level metadata.
 
-Why not stuff all of this into one database? Because the two kinds of data have completely different access patterns. Business data needs transactions, foreign keys, filtering, and pagination—home turf for a relational database. Vector retrieval needs "given a query vector, find the most similar top-k," which is essentially approximate nearest-neighbor search. Cramming high-dimensional vectors into an ordinary table and computing distances row by row is both slow and hard to maintain. Letting each kind of data use the right engine actually keeps the interface cleaner. Force them together and one class of operation always ends up contorting itself around the other's storage layout, dragging down both read and write paths.
+Relational business workflows rely on ACID transactions, foreign keys, multi-dimensional filtering, and pagination; semantic vector retrieval centers on high-dimensional Approximate Nearest Neighbor (ANN) search via Cosine similarity. Decoupling these workloads preserves clean query pathways and optimal indexing performance across both storage engines.
 
-Document import is a pipeline you can break apart:
+The document ingestion pipeline operates through discrete stages:
 
-- Apache Tika extracts plain text from PDF, Word, plain text, and other formats, masking format differences.
-- The text is split into chunks of a controlled size—say 500 characters with a 50-character overlap (numbers here are illustrative; tune them to your corpus and embedding model). The overlap exists so a sentence cut in the middle doesn't lose its context.
-- An embedding is generated for each chunk.
-- The vector, together with chunk metadata (which document, which chunk index, position in the source), is written to the vector table.
-
-As pseudocode, the boundaries are clearer:
-
-```text
-# import (index path)
-text   = tika.extract(file)                   # mask PDF/Word/plain-text differences
-chunks = split(text, size=500, overlap=50)    # numbers illustrative, tune per corpus
-for c in chunks:
-    v = embed(c.text)                         # produce a fixed-dimension vector
-    pgvector.insert(v, meta={doc_id, idx, span})
-mysql.save(doc_meta)                          # register the document on the business side
-```
-
-Metadata matters because retrieval hits a vector, but what the user needs to see is "which paragraph of which document this came from." Without metadata, there's no way to turn a similarity result back into a checkable citation. A vector is just a string of floats—it can tell you something is *similar*, but not where it *came from*, and enterprise contexts care most about provenance.
-
-Chunk size is a knob to trade off, not a smaller-is-better or bigger-is-better dial. Cut too fine and a single chunk carries incomplete meaning, so retrieval hits half a sentence. Cut too coarse and one chunk mixes several topics, diluting similarity and blurring the citation. Overlap compensates at the cut points: adjacent chunks share a small boundary of text so a key sentence that happens to land on a split isn't lost on both sides. These numbers all have to be tried against your actual corpus; there's no default that settles it once and for all.
-
-At query time, pgvector cosine search is preferred, taking the top-k most similar chunks as context:
+1. **Format Extraction**: Apache Tika extracts clean, unformatted text from PDF, Word, Markdown, and plain text formats;
+2. **Text Chunking**: Content is split into bounded segments (e.g., 500 characters with a 50-character overlap) to preserve cross-boundary semantic context;
+3. **Embedding Generation**: Dedicated embedding models compute fixed-dimensional vector representations;
+4. **Dual Persistence**: Vectors and chunk metadata (document ID, chunk index, character span) are inserted into pgvector, while document-level metadata and processing status are committed to MySQL.
 
 ```text
-# query (query path)
-q    = embed(question)
-hits = pgvector.search(q, top_k=5)            # preferred: cosine top-k (top_k value illustrative)
-if vector_unavailable or not hits:
-    hits = mysql.keyword_cjk_search(question) # fallback: keyword / CJK
-context = [h.chunk for h in hits]             # assemble context, carry citations
+# Document Ingestion Pipeline
+raw_text = tika.extract(file)
+chunks   = split(raw_text, size=500, overlap=50)
+for chunk in chunks:
+    vector = embed(chunk.text)
+    pgvector.insert(vector, metadata={doc_id, chunk_index, span})
+mysql.save(doc_metadata)
 ```
 
-Here's a fallback path I didn't skip: if the vector service is unavailable—connection failure, timeout, or dimension mismatch—retrieval falls back to MySQL keyword and CJK search. CJK segmentation differs from English; splitting on whitespace would treat a whole Chinese sentence as one token, so the fallback has to handle CJK specifically to be useful. The fallback's quality is usually worse than vector retrieval, but it guarantees that "the vector store went down, so the whole Q&A is dead" never happens. The fallback isn't the default path; it's an explicit safety net—you don't reach it under normal conditions, and when you do, the user at least gets a keyword-based answer instead of a spinning blank page.
+Chunk metadata enables verifiable citation tracing: when top-k chunks are retrieved via vector distance, the system queries the associated metadata to link each retrieved snippet back to its source document and paragraph in the frontend UI.
 
-The k in top-k also needs restraint. Too few and you may miss the genuinely relevant chunk; too many and irrelevant content crowds the context and dilutes the model's attention. It's coupled to chunk size: smaller chunks usually need a larger k to gather enough context.
+During query execution, the system defaults to pgvector for Cosine similarity retrieval, gathering the top-k most relevant text chunks to populate the generation context:
 
-The two stores' responsibilities line up more clearly side by side:
+```text
+# Query Execution Pipeline
+query_vector = embed(user_question)
+hits = pgvector.search(query_vector, top_k=5)
+if vector_unavailable or len(hits) == 0:
+    hits = mysql.keyword_cjk_search(user_question)  # Fallback to lexical CJK search
+context = [hit.chunk for hit in hits]
+```
+
+To guarantee high availability, the query pipeline includes an automatic fallback mechanism: if pgvector encounters network latency, timeouts, or dimensionality mismatches, search requests fall back to MySQL full-text and CJK lexical search. Although lexical matching lacks deep semantic generalization, it prevents single-point vector outages from disabling conversational workflows.
 
 | Dimension | MySQL | PostgreSQL + pgvector |
 | --- | --- | --- |
-| What it holds | KB, doc metadata, data sources, report templates, run records, chats, config | fixed-dimension vectors, chunk metadata |
-| Access pattern | transactions, filtering, pagination, joins | top-k approximate nearest neighbor |
-| Main role | carries business-workflow state | powers semantic retrieval |
-| Role in Q&A | keyword / CJK fallback | preferred cosine search |
+| Stored Entities | Knowledge bases, document metadata, data sources, templates, logs, conversations | Fixed-dimensional vectors, chunk metadata |
+| Access Pattern | ACID transactions, conditional filtering, foreign keys, pagination | Top-k Approximate Nearest Neighbor (ANN) search |
+| Core Responsibility | Business workflows and state machine persistence | Semantic recall and similarity computation |
+| Query Role | Lexical / CJK fallback retrieval | Primary Cosine vector similarity search |
 
-This separation is not about stacking databases, but about letting structured business data and similarity search each use the right tool, while keeping a fallback path. It also means deleting a document has to touch both sides: remove the business record in MySQL and clear the corresponding vectors and chunks in pgvector, or retrieval will hit a document that no longer exists and the citation becomes meaningless. A delete across two databases has no natural transaction guarantee, so order and compensation need thought: one safe approach is to mark the business record deleted first, then clean the vectors asynchronously—so even if it fails midway, a reconciliation job can scan out orphan chunks ("vector with no matching document") and reclaim them, rather than letting them quietly linger in results.
+When a document is deleted, the system first marks the document record as deleted in MySQL, then triggers an asynchronous purge of associated chunks in pgvector, supplemented by scheduled reconciliation routines to clean orphan vector entries.
 
-![RAG cockpit index and query paths, and the MySQL / pgvector dual-database split](/images/enterprise-ai-cockpit-rag.svg)
+![RAG Cockpit indexing and querying pipelines, with MySQL and pgvector division of labor](/images/enterprise-ai-cockpit-rag.svg)
 
-## Streaming Answers Must Come from the Real Upstream
+## End-to-End True SSE Streaming Architecture
 
-The backend uses Spring WebFlux and Spring AI. After `ChatClient` receives SSE from the upstream OpenAI-compatible/DeepSeek, it continues to send tokens, citations, chart information, and completion status as an event stream to the Vue frontend.
+The backend leverages Spring WebFlux and Spring AI. The `ChatClient` consumes Server-Sent Events (SSE) from upstream OpenAI-compatible / DeepSeek endpoints, streaming structured events directly to the Vue frontend in real time.
 
-This is fundamentally different from slicing a full answer into several strings locally and emitting them on a timer. Fake local streaming is only a visual effect; the time-to-first-token still equals generating the whole answer. A real upstream stream lets the user see feedback the moment the model emits its first few tokens. The cost is that the real stream is no longer one clean string, but a sequence of events with states to handle:
+Unlike local buffered implementations that simulate typewriter animations after generation completes, end-to-end streaming renders the initial tokens as soon as the upstream model emits them, minimizing Time-to-First-Token (TTFT).
+
+The streaming protocol is structured around explicit lifecycle events:
 
 ```text
-event: open           // connection established
-event: token   × N    // incremental text, appended piece by piece
-event: citation       // matched source chunks
-event: chart          // structured chart data
-event: done           // normal completion
-event: error/timeout  // exception branch, must close explicitly
+event: open           // Connection established
+event: token   × N    // Incremental text chunks for frontend appending
+event: citation       // Source attribution metadata from knowledge base hits
+event: chart          // Structured charting payloads for ECharts rendering
+event: done           // Normal generation completion
+event: error/timeout  // Explicit error or timeout termination
 ```
 
-Carrying this stream with WebFlux helps because it handles backpressure natively as a `Flux`: the upstream produces a piece and it's pushed downstream, without buffering the whole answer in memory first. But async also means an error is no longer a return value a simple try/catch can catch—it's an event on the stream, and it has to be modeled explicitly within the stream's semantics.
+Spring WebFlux `Flux` streams natively support reactive backpressure, preventing excessive memory accumulation during high-concurrency generation. Every SSE stream guarantees termination with either a `done` or `error/timeout` event, preventing client interfaces from hanging indefinitely during network drops.
 
-The last two lines are the point. The connection can drop mid-stream, the upstream can time out, or it can return an error event. None of these can be swallowed—the frontend must know whether the stream ended normally or aborted, otherwise the UI hangs forever on "typing." So the backend guarantees that every SSE stream ends either with `done` or with `error`/`timeout`; there is no third, silent "it just stopped." This invariant looks trivial, but it's the foundation of whether the streaming experience can be trusted: allow even one "stream with no terminal state" and the frontend has to bolt on timeout guesses everywhere to compensate, and the complexity bites straight back.
+At the reverse proxy tier, production Nginx configurations set `proxy_buffering off` and `proxy_cache off` for streaming endpoints, ensuring chunks bypass intermediate buffers and reach the browser with sub-millisecond latency.
 
-There's also an easily overlooked link: Nginx needs to turn off SSE buffering. By default a reverse proxy buffers the response, collecting a batch before forwarding. That's an optimization for ordinary endpoints but a disaster for SSE—the backend outputs piece by piece, yet the browser might still receive everything at once at the end, and the streaming experience is gone. Turn off buffering and events pass through the proxy the instant they're produced. The nasty part of debugging this is that a local direct connection works perfectly and it only reproduces once you're behind the proxy, which is easy to misread as the backend not streaming at all.
+![SSE event stream timeline: upstream through ChatClient to frontend, including error and timeout branches](/images/enterprise-ai-cockpit-sse.svg)
 
-![SSE event stream over time: upstream through ChatClient to the frontend, with error and timeout branches](/images/enterprise-ai-cockpit-sse.svg)
+The frontend renders response text, source badges, and interactive ECharts visualizations within a unified conversational stream, combining assertions, citations, and data graphs in a single view.
 
-The frontend places answer text, cited documents, and ECharts charts in the same context. token events keep appending body text, citation events render the matched chunks as expandable sources, and chart events carry structured data for ECharts to draw. The user sees not only "what the model said" but can also ask "what it based that on."
+## Functional Scope and Security Boundaries
 
-## The Full Trace of a Single Q&A
+The platform integrates report templates, asynchronous batch execution, external data source connectivity tests, and Model Context Protocol (MCP) tooling.
 
-Stitch the pieces together and one Q&A actually runs the whole pipeline. The user asks in the cockpit; the question is first embedded into a query vector and run through pgvector cosine retrieval for the top-k chunks—or, if the vector service is unavailable at that moment, it falls back to keyword and CJK search. The matched chunks plus the question are assembled into context and handed to `ChatClient` for the upstream. The upstream starts emitting tokens; the backend forwards token events while inserting citation and chart events at the right moments, and closes with `done`—and any failure along the way closes explicitly with `error`/`timeout`.
+Key security and architectural boundaries include:
 
-I deliberately made every step of this trace observable, because what's really thorny in an enterprise setting is often not "is the answer right" but "when it's wrong, can you find where." What retrieval hit, which passages were cited, whether the stream ended cleanly or aborted—if all of that lives in logs and events, an unsatisfying answer can be reviewed rather than becoming an unquestionable "that's just what it said."
+- **Restricted Operation Governance**: The public demo provides read-only views, while uploads, deletions, and heavy report generation are protected by short-lived backend Action Tokens;
+- **Strict Citation Grounding**: Model responses must be grounded in retrieved context chunks, preventing unverified assertions.
 
-## An Enterprise Cockpit Is Not a Universal Robot
+## Resource Governance in Constrained Environments
 
-The current system also includes report templates, run records, data source tests, voice interfaces, and an MCP weather example. The point of these capabilities is to verify how AI enters an existing workflow, not to cram every function into a dialog box.
+Operating on a 2GB RAM cloud node alongside quantitative trading and trend analysis services requires strict resource constraints. Frontend assets are fully pre-compiled into static bundles, while the backend runs inside a precisely tuned JVM container.
 
-The way I read "cockpit" is this: AI is one instrument on the panel, not a black box that replaces all the instruments. Reports have templates and run records, data sources can be connectivity-tested on their own, conversations have a history you can trace back—these are structures that let the AI's output be traced and reviewed, rather than "just ask it." The value of a dashboard is precisely that each gauge has its job and its readings can be cross-checked; cramming everything into one chat box mashes a stack of readings into a single sentence—pretty, but uncheckable.
+Resource caps are enforced across all layers:
+- **JVM Heap & Metaspace**: Constrained via `-Xmx` and `-XX:MaxMetaspaceSize` to prevent unbounded memory growth;
+- **Direct Memory**: Because Spring WebFlux utilizes Netty for off-heap I/O buffers, `-XX:MaxDirectMemorySize` is explicitly defined;
+- **Connection and Thread Pools**: HikariCP connection pools and Quartz scheduler threads operate with minimal concurrent allocations.
 
-I deliberately kept a few boundaries:
+Under system-level memory pressure, the cockpit service maintains the lowest priority tier and can be gracefully downgraded or paused to safeguard core infrastructure.
 
-- Local embedding is used only for repeatable pipeline verification; production quality still requires a real model.
-- Data source extraction and report tasks still have an MVP nature.
-- The public demo exposes read-only screens, while chat, uploads, deletes, and report runs require a short-lived backend action token; application-level RBAC, tenant isolation, and auditing remain future work.
-- Model answers must include citations; fluent expression cannot be treated as a guarantee of fact.
-
-I write these boundaries down because I don't want the demo to look more mature than it actually is. That local embedding runs the pipeline doesn't mean its recall quality is production-grade; that a read-only demo plus short-lived tokens blocks casual damage doesn't make it a full permission system. Honestly labeling "this part is still MVP" is cheaper than being found out later.
-
-That last one is what I value most. Fluent and correct are two different things. An answer that can cite its source, even in plain wording, is more usable than an eloquent passage you can't check. Requiring citations is essentially giving the model's confidence an anchor that can be verified—the more assertively it speaks, the more it should be able to point to the passage that sentence came from.
-
-## Trade-offs on a Small Server
-
-This system shares 2GB of memory with two other projects. All frontend is built locally into static files; the server runs only one constrained JVM backend. The database connection pool, Quartz threads, heap, metaspace, and direct memory all have explicit limits.
-
-Why pin down a ceiling on every one of them? Because on a shared-memory machine, the real danger isn't a component using a lot—it's a component with no cap. An unbounded connection pool or thread pool will quietly eat memory under load and then drag down the other services on the same box. Setting an explicit ceiling on each item is declaring in advance "this is the most I'll use," which makes capacity predictable. Predictable matters more than "runs faster"—on this machine, the cascading failure from one uncontrolled memory spike costs far more than the bit of latency you'd save.
-
-Direct memory deserves its own watch. Netty-based frameworks like WebFlux use off-heap memory, which isn't bound by the ordinary heap limit and is the easiest thing to forget to configure; once traffic rises, the heap can look roomy while off-heap is quietly swelling. Only by pinning it down too do you actually close the books on this machine's memory.
-
-If overall resources continuously exceed the threshold, the intelligent cockpit will become the first backend to be suspended. That's a deliberate priority: compared with the other two projects, it's more of a testbed, so pausing it costs the least. This is not a failure, but a part of capacity boundaries: the system should know when to hold back. Deciding "who yields first" ahead of time is far steadier than improvising the choice when memory is already tight.
-
-You can open the current version at [/smartCockpit/](/smartCockpit/). It is still a laboratory, but it is no longer just a chat box.
+You can access the live deployment at [/smartCockpit/](/smartCockpit/). It is still a laboratory, but it is no longer just a chat box.

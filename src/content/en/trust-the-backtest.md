@@ -1,102 +1,92 @@
 ---
-title: Trustworthy Backtesting for Quantitative Research
-excerpt: I used to treat backtests as answers; now I prefer to treat them as testimony that needs auditing—time, cost, sample, and parameters can all make them lie. This is the cross-examination I run.
+title: Rigorous Audit Rules for Quantitative Backtesting
+excerpt: A systematic guide to backtesting integrity: causality enforcement (shift(1)), point-in-time financial data, cost sensitivity stress testing, Walk-forward isolation, and sample-level look-ahead prevention.
 ---
 
-As a quantitative beginner, my earliest sense of achievement came from equity curves. Adjust a few windows, thresholds, and weights, and the curve could suddenly turn smooth and steep. In that moment, it’s easy to fall under the illusion that you’ve found a pattern.
+In quantitative strategy research, overfitting an equity curve with an exceptional Sharpe ratio is relatively easy, but such strategies almost inevitably fail in live production. In most cases, live underperformance is not caused by abrupt market regime shifts, but by hidden look-ahead bias, data leakage, and improper statistical practices embedded in backtest routines.
 
-One sentence from the course later changed my order of judgment: **Before the pretty curve, prove there is no cheating.**
+To ensure that backtest metrics carry statistical validity and practical execution guidance, this article details essential audit rules for quantitative research pipelines.
 
-It demotes a backtest from a "result" to "testimony." Testimony can be true, or it can lie without meaning to, and my job is not to admire it but to cross-examine it like an auditor. The checks below are the questions I now ask most often.
+## Temporal Causality in Signal Generation
 
-## A same-day signal cannot earn same-day returns
+The most pervasive and insidious form of look-ahead bias occurs when signal generation and trade execution timestamps are improperly aligned.
 
-The smallest and most common look-ahead bias often boils down to a single `shift(1)`.
+If a strategy computes indicators using day $T$'s closing prices, orders can only be executed at the earliest during the $T+1$ market open or intraday session. Multiplying day $T$'s signal directly by day $T$'s price return implies prior knowledge of that day's price movement. This logical flaw generates no runtime exceptions, but fictitiously inflates returns and smooths drawdowns.
 
-Suppose I calculate a moving-average signal using today’s closing price. The signal can only be fully determined after today’s close, so normally it should only decide whether to hold on the next trading day. If I directly multiply today’s signal by today’s return, I am essentially finding out how much the price rose today and then pretending I’ve been holding since the open. This kind of error throws no exception and doesn’t make the curve ugly—on the contrary, it makes the curve prettier, which is exactly what makes it dangerous.
-
-Now I write a very small test for this kind of logic: construct three to five days of prices, let the signal appear only after the close of a particular day, and then assert that the strategy’s return can only start from the next period. The test doesn’t need real market data—its value is to fix the time semantics. The illustrative pseudocode looks roughly like this:
+In production codebases, temporal causality must be enforced via explicit lags (e.g., `shift(1)` in pandas) and guarded by unit tests:
 
 ```python
-# Illustrative: prove the signal can only act on the next period
+# Unit test validating that signals only affect subsequent periods
 import pandas as pd
 
-price = pd.Series([10, 10, 11, 12, 13])          # rise happens at index 2
-raw_signal = (price > price.shift(1)).astype(int)  # known only after close
-position = raw_signal.shift(1).fillna(0)         # the key: shift by one bar
-ret = price.pct_change().fillna(0)
-strat = position * ret
+price = pd.Series([10.0, 10.0, 11.0, 12.0, 13.0])      # Price jump occurs at index 2 (Day 3)
+raw_signal = (price > price.shift(1)).astype(int)       # Signal generated after close
+position = raw_signal.shift(1).fillna(0)                # Shift by one period to enforce causality
+pct_returns = price.pct_change().fillna(0)
+strategy_returns = position * pct_returns
 
-# assert: the rise is at index 2, so the return must land at index 3 onward
-assert strat.iloc[2] == 0
-assert strat.iloc[3] != 0
+# Assert: price jump at index 2 must only generate returns from index 3 onward
+assert strategy_returns.iloc[2] == 0.0
+assert strategy_returns.iloc[3] > 0.0
 ```
-
-If someone later refactors the order logic and quietly drops that shift, this test turns red immediately. What it protects is not the return but the causal direction of time.
 
 ![Same-day signal look-ahead trap: signal(T) × return(T) peeks at today’s move, while shift(1) lets the signal act only on T+1](/images/trust-the-backtest-timing.svg)
 
-## Financial data has more than one date
+## Point-in-Time (PIT) Consistency for Financial Fundamentals
 
-The reporting period of an annual report might be December 31, but the market may not actually see it until March of the following year. If the backtest only uses `report_date`, you could use data in January that hasn’t been announced yet.
+Corporate financial statements have a reporting period (`report_period`, e.g., December 31) that precedes public disclosure (`available_at`, typically March-April of the following year) by months. Querying fundamental data based solely on `report_period` introduces severe look-ahead bias, using unannounced financial figures in early-year rebalancing.
 
-Therefore, financial data should keep at least:
+To eliminate look-ahead leakage in corporate fundamentals, datasets must support **Point-in-Time (PIT)** constraints:
 
-- Which reporting period it describes (`report_period`);
-- When the market could have obtained it (`available_at`);
-- What the source is (`source`);
-- Whether it’s a preliminary estimate, an express report, a formal report, or a revision (`revision`).
+- `report_period`: The accounting fiscal period;
+- `available_at`: The exact timestamp when the filing became publicly accessible on exchange feeds;
+- `revision_type`: Distinguishes between preliminary earnings guidance, flash reports, audited annual filings, and subsequent restatements.
 
-With these columns, the query logic gains a hard constraint: on every scoring date `t`, select only records where `available_at <= t`, and among the qualifying versions take the latest one. A single reporting period often cycles through "preliminary → express → formal → revised." Keeping only one "final value" looks clean but actually stuffs a number you learned later back into the past. Revisions are especially treacherous: they hand a more accurate figure—one nobody knew at the time—back to your past self ahead of schedule.
+On each rebalancing date $t$, query pipelines must enforce `available_at <= t` and retrieve only the latest disclosure publicly available at that exact moment. When handling accounting restatements, retroactive corrections must not overwrite historic flash disclosures previously known to the market.
 
-This "point-in-time" constraint looks like a database detail, but at its core it determines whether the researcher in the experiment has traveled through time. My habit is to make it the default behavior of the storage layer, not a filter I remember at analysis time—because once forgotten, the backtest doesn’t error out, it just looks better.
+## Execution Friction and Cost Sensitivity Stress Testing
 
-## Gross returns do not belong to the real world
+Gross returns without realistic execution frictions are detached from live trading reality. Stamp duties, exchange fees, broker commissions, bid-ask spread slippage, and market impact costs erode profitability—especially in high-turnover models.
 
-Commissions, stamp duties, slippage, and market impact costs can turn many high-turnover strategies from "excellent" to "unimplementable." I no longer look only at gross returns; instead I compare at least a set of cost sensitivities:
+After establishing a baseline backtest, researchers must run cost sensitivity stress tests:
 
-1. Results under baseline costs;
-2. Results after doubling the costs;
-3. Results after lowering the rebalancing frequency;
-4. How turnover, returns, and maximum drawdown change together.
+1. **Baseline Friction Model**: Standard commission, statutory stamp taxes, and baseline slippage (in bps);
+2. **Double Friction Stress Test**: Double the slippage and fee assumptions to evaluate drawdown expansion and alpha decay;
+3. **Turnover Reduction Test**: Increase holding thresholds to verify whether alpha remains resilient as turnover drops.
 
-These tiers aren’t read in isolation; the point is the interaction between them. When costs double, what really gets eaten is the thin edge earned by frequent trading, so net return drops and drawdown deepens while turnover itself stays flat—a sign that the return leans heavily on a low-friction assumption. I also remind myself here that cost is not a fixed constant: market impact scales with order size and liquidity, and the slippage a small account can ignore may, at live-trading scale, be enough to consume the entire excess return. Lowering the rebalancing frequency checks it from the other direction: if returns don’t collapse once turnover is suppressed, the core of the strategy is the holding itself, not the feel of going in and out. The diagram below places the three tiers side by side; the directions only express the interaction and are not measured numbers:
+![Cost sensitivity ladder: baseline costs, doubled costs, and reduced turnover side by side, showing direction of return, max drawdown, and turnover rate](/images/trust-the-backtest-cost.svg)
 
-![Cost sensitivity ladder: base cost, doubled cost, and lower turnover side by side, showing how return, max drawdown, and turnover move together](/images/trust-the-backtest-cost.svg)
+If a strategy's returns collapse under minor cost increases, the model is simply exploiting low-friction simulation artifacts rather than capturing genuine economic alpha.
 
-If a strategy only works under extremely low cost assumptions, it looks more like a decoration in the data than a research hypothesis worth pursuing.
+## Out-of-Sample Isolation and Preventing Data Snooping
 
-## The test set is not an answer sheet you can read over and over
+Researchers often succumb to data snooping by iteratively tweaking parameters after observing poor performance in a specific test window. Even when individual modifications appear sound, this practice converts test data into an implicit training set, invalidating statistical conclusions.
 
-Another pitfall that left a deep impression was continuing to adjust parameters when performance on the test period was poor. Even if every change is reasonable, as long as I repeatedly examine the same test results, they gradually participate in parameter selection and are no longer true out-of-sample data. This leak has no single "moment of cheating"; it accumulates quietly across many rounds of "let me try one more."
+Adopting **Walk-Forward** analysis enforces rigorous parameter isolation:
+- Parameter optimization is strictly confined to rolling In-Sample (IS) training windows;
+- Locked parameters are evaluated exactly once on the immediately following Out-of-Sample (OOS) window;
+- Strategy performance is evaluated strictly on the concatenated sequence of OOS returns.
 
-Walk-forward gave me a stricter process: in each window, compare candidate parameters only on the training segment, lock in the winning parameters, and run them once on the immediately following test segment. The final curve simply concatenates the out-of-sample returns from each window. Even if a test window loses money, you cannot change parameters on the spot, because the loss itself is evidence. Only with a lock between "choosing" and "checking" can I claim that segment of returns wasn’t contaminated by my hindsight.
+## Sample-Level Look-Ahead Bias Prevention
 
-The length of the training window is itself a parameter that must be decided beforehand rather than nudged after the fact: too short, and the chosen parameters merely fit recent noise; too long, and the window may straddle a shift in market regime. My approach is to write this choice into the process too—together with the rolling step size—and fix it up front, so it doesn’t become yet another hidden knob I keep probing.
+Beyond time-series alignment, asset universe definitions must be protected against survivorship and classification biases:
 
-## Beyond time, a few overlooked peeks
+- **Survivorship Bias**: Using a universe composed only of actively trading stocks retroactively excludes historical bankruptcies, delistings, and distressed companies. Backtest universes must dynamically reconstruct historical constituent rosters (including delisted tickers);
+- **Trading Halts & Limit Price Liquidity**: Strategies signaling buy orders during trading halts or limit-up lockups cannot execute in live markets. Backtest engines must simulate realistic matching barriers and reject unexecutable orders;
+- **Historic Sector and Index Classification**: Historical sector classifications and index constituent weights must reflect point-in-time definitions rather than current standards.
 
-Apart from time semantics, the sample itself can peek at the future, and more subtly:
+## Quantitative Audit Checklist
 
-- **Survivorship bias**: if the universe contains only names still trading today, you’ve pre-removed the companies that later delisted or blew up, and every survivor in the backtest is a winner.
-- **Halts and price limits**: a signal tells me to buy on a given day, but that day happens to be a locked limit-up or a trading halt, so in reality I can’t fill at all. If the backtest assumes I can always transact at the close, it pockets a batch of the fiercest moves for free.
-- **Universe look-ahead**: using today’s sector classifications, index membership, or market-cap ranks to pick stocks years ago stuffs today’s labels back into the past.
+When reviewing strategy backtest reports, evaluate against this audit checklist:
 
-What these traps share is that they all make the backtest more forgiving than reality—and forgiveness always leans toward a prettier curve.
+1. Does order execution adhere to strict $T+1$ causality relative to signal generation?
+2. Are fundamental and macroeconomic indicators constrained by Point-in-Time timestamps?
+3. Is the dynamic universe free of survivorship bias, including historic delistings?
+4. Does the matching engine reject orders during trading halts and limit-up/limit-down conditions?
+5. Has the strategy passed double-friction and slippage sensitivity stress tests?
+6. Are parameters optimized solely on training windows and validated via Walk-Forward OOS testing?
+7. Does the report disclose turnover rates, sub-period breakdowns, and maximum drawdown durations?
 
-## How I read a curve now
+Embedding these audit standards into the [AI Quant System](/quant/) ensures research integrity and protects against false alpha.
 
-When I see results, I first ask—and behind each question I make the corresponding failure mode explicit:
-
-- Did the signal and the trade miss the correct timing? — If so, a look-ahead bias is peeking at the same day.
-- Were financial data, news, and the universe using the version available at the time? — If not, it’s a point-in-time leak or look-ahead.
-- Have I factored in sufficiently conservative trading costs? — If not, gross returns overstate what’s executable.
-- Was the parameter grid fixed before the experiment? — If not, I’m tuning on the test set.
-- Does the final result rely only on data that didn’t take part in selection? — If not, "out-of-sample" is a misnomer.
-- Does the report also include drawdown, turnover, per-window performance, and failure periods? — Reporting only one smooth curve is usually hiding something.
-
-After studying quantitative methods, I haven’t become better at believing models; instead, I’ve become better at asking questions that make models uncomfortable. I think that’s progress: backtesting is not about proving how smart you are, but about discovering as early as possible where you might be wrong. The curve I’m willing to trust is usually not the steepest one, but the one that still stands after every question above has cross-examined it.
-
-I’m also gradually embedding these checks into the research and audit process of my [AI quantitative system](/quant/).
-
-> This article is a personal learning note and does not constitute investment advice.
+> This article is for quantitative research and technical methodology discussion only and does not constitute investment advice.
