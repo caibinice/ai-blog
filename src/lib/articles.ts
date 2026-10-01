@@ -25,6 +25,7 @@ export const articleMeta: ArticleMeta[] = [
   { slug: 'multi-branch-feature-migration', date: '2026-07-15', tags: ['Git', 'Cherry-pick', 'Deployment'] },
   { slug: 'enterprise-rag-knowledge-engineering', date: '2026-08-18', tags: ['RAG', 'Hybrid Search', 'MCP', 'Knowledge Engineering'], projectPath: '/smartCockpit/' },
   { slug: 'sub2api-enterprise-ai-gateway', date: '2026-08-23', tags: ['AI Gateway', 'Sub2API', 'Go', 'Redis', 'Architecture'] },
+  { slug: '3d-smart-parking-engineering', date: '2026-10-01', tags: ['3D', 'Babylon.js', 'WebGPU', 'Performance', 'Mobile'], projectPath: '/smartParking/' },
 ]
 
 const modules = import.meta.glob('../content/**/*.md', {

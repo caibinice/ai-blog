@@ -5,9 +5,9 @@ import { copy, localizedPath, type Locale } from './i18n'
 describe('localized static content', () => {
   const locales: Locale[] = ['zh', 'en', 'ja']
 
-  it.each(locales)('ships all eight articles in %s', (locale) => {
+  it.each(locales)('ships all nine articles in %s', (locale) => {
     const articles = listArticles(locale)
-    expect(articles).toHaveLength(8)
+    expect(articles).toHaveLength(9)
     expect(articles.map(({ slug }) => slug)).toEqual(articleMeta.map(({ slug }) => slug))
     expect(articles.every(({ title, excerpt, body }) => title && excerpt && body.length > 500)).toBe(true)
   })
@@ -15,8 +15,8 @@ describe('localized static content', () => {
   it.each(locales)('builds deterministic static article pages in %s', (locale) => {
     expect(articlePageCount()).toBe(2)
     expect(listArticlePage(locale, 1)).toHaveLength(6)
-    expect(listArticlePage(locale, 1)[0].slug).toBe('sub2api-enterprise-ai-gateway')
-    expect(listArticlePage(locale, 2).map(({ slug }) => slug)).toEqual(['trust-the-backtest', 'ai-quant-system'])
+    expect(listArticlePage(locale, 1)[0].slug).toBe('3d-smart-parking-engineering')
+    expect(listArticlePage(locale, 2).map(({ slug }) => slug)).toEqual(['cross-border-trends', 'trust-the-backtest', 'ai-quant-system'])
   })
 
   it('keeps project navigation in every translated article', () => {

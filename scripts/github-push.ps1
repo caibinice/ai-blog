@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('blog', 'quant', 'crossborder', 'cockpit')]
+  [ValidateSet('blog', 'quant', 'crossborder', 'cockpit', 'parking')]
   [string]$Project,
   [string]$Message = '',
   [string[]]$Files = @(),
@@ -17,6 +17,7 @@ $definitions = @{
   quant = @{ Directory = 'ai-quantitative-trading'; Branch = 'main'; Namespace = 'quant' }
   crossborder = @{ Directory = 'crossborder-trend-report'; Branch = 'main'; Namespace = 'crossborder' }
   cockpit = @{ Directory = 'enterprise-ai-cockpit'; Branch = 'main'; Namespace = 'cockpit' }
+  parking = @{ Directory = '3dSmartParking'; Branch = 'main'; Namespace = 'parking' }
 }
 $definition = $definitions[$Project]
 $projectRoot = Join-Path $codesRoot $definition.Directory
@@ -104,12 +105,24 @@ try {
   $env:GIT_CONFIG_KEY_3 = 'user.email'
   $env:GIT_CONFIG_VALUE_3 = $gitUserEmail
 
-  & git -C $projectRoot fetch origin $definition.Branch
-  if ($LASTEXITCODE -ne 0) { throw 'GitHub fetch 失败。' }
-  $divergenceText = ((& git -C $projectRoot rev-list --left-right --count "HEAD...origin/$($definition.Branch)") -join ' ').Trim()
-  $divergence = $divergenceText -split '\s+'
-  $localAhead = [int]$divergence[0]
-  $remoteAhead = [int]$divergence[1]
+  $remoteRef = & git -C $projectRoot ls-remote --heads origin $definition.Branch
+  if ($LASTEXITCODE -ne 0) { throw 'GitHub 分支检查失败。' }
+  $localAhead = 0
+  $remoteAhead = 0
+  if ($remoteRef) {
+    & git -C $projectRoot fetch origin $definition.Branch
+    if ($LASTEXITCODE -ne 0) { throw 'GitHub fetch 失败。' }
+    & git -C $projectRoot rev-parse --verify HEAD 2>$null | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw '远端已有历史，请先同步到本地再提交。' }
+    $divergenceText = ((& git -C $projectRoot rev-list --left-right --count "HEAD...origin/$($definition.Branch)") -join ' ').Trim()
+    $divergence = $divergenceText -split '\s+'
+    $localAhead = [int]$divergence[0]
+    $remoteAhead = [int]$divergence[1]
+  } else {
+    # Empty remote: allow the first commit, or retry an already-created initial commit.
+    & git -C $projectRoot rev-parse --verify HEAD 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) { $localAhead = 1 }
+  }
   if ($remoteAhead -gt 0) {
     throw "远端领先 $remoteAhead 个提交，请先执行 bootstrap-workspace.ps1 -Sync。"
   }
@@ -142,7 +155,7 @@ try {
     & git -C $projectRoot commit -m $Message
     if ($LASTEXITCODE -ne 0) { throw 'Git 提交失败。' }
   }
-  & git -C $projectRoot push origin $definition.Branch
+  & git -C $projectRoot push --set-upstream origin $definition.Branch
   if ($LASTEXITCODE -ne 0) { throw 'GitHub 推送失败。' }
   $revision = (& git -C $projectRoot rev-parse --short HEAD).Trim()
   Write-Host "Pushed project=$Project branch=$branch commit=$revision" -ForegroundColor Green

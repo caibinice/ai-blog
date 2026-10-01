@@ -58,6 +58,17 @@ token 只在本地翻译或部署阶段读取，不进入浏览器。
 [https://caibinice.com/](https://caibinice.com/)。域名证书可在 ICP 备案完成前
 通过 DNS-01 签发；备案仍决定中国内地阿里云公网入口是否持续、稳定放行。
 
+## 新增三维停车项目
+
+`E:\codes\3dSmartParking` 是独立静态前端，对应
+[3dSmartParking](https://github.com/caibinice/3dSmartParking)。
+线上入口：[桌面版](https://caibinice.com/smartParking/)、
+[手机版](https://caibinice.com/smartParking/mobile)。
+项目使用独立发布脚本，不随原三个服务的全量发布重新构建。
+共享 GitHub 提交脚本支持 `-Project parking`，仍读取共享 token 并使用20808代理。
+
+部署方式见 [`docs/deployment.md`](docs/deployment.md) 中的三维停车说明。
+
 ## License
 
 [MIT](LICENSE)

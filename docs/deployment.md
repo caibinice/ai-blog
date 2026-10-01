@@ -7,6 +7,27 @@
 - `/quant/`：AI 量化公开查看，采集、AI、回测和配置写操作使用后端短期令牌。
 - `/crossBorderTrend/`：公开前台，采集使用操作令牌，管理区使用项目 JWT。
 - `/smartCockpit/`：智能座舱公开查看，聊天、上传和报告等操作使用后端短期令牌。
+- `/smartParking/`：智慧停车独立静态前端；`/smartParking/mobile` 为轻量手机页面。
+
+### 三维停车独立发布
+
+新增仓库固定目录`E:\codes\3dSmartParking`，使用博客共享凭据和量化项目的RemoteClient：
+
+```powershell
+cd E:\codes\3dSmartParking
+npm ci
+npm run typecheck
+npm test
+npm run build
+E:\codes\ai-quantitative-trading\.venv\Scripts\python.exe scripts\deploy.py
+```
+
+发布目录`/opt/3d-smart-parking/releases/<timestamp>`，`www`软链接指向当前release。
+首次发布在共享Nginx路由追加停车片段；博客本地的`ai-platform-routes.conf`也保留相同路由，后续统一部署不会覆盖丢失。
+发布前备份共享Nginx片段，配置错误或HTTP自检失败时恢复原链接与配置。
+HTML、模型短期缓存，带指纹JS/CSS长期缓存，预压缩文件由gzip_static提供。
+
+此项目为前端模拟数据演示，不新增后台服务；原四仓库bootstrap和全量发布保持原范围。
 
 本地运行 `pwsh -File scripts/deploy.ps1` 会按 lockfile 重装三个前端依赖，
 执行博客检查、两个 Java 项目测试/打包及各自前端生产构建，再上传静态文件
