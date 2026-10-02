@@ -3,7 +3,7 @@ title: Engineering a 3D Parking Twin for Desktop and Mobile
 excerpt: A fullscreen, detailed campus twin with shared vehicle geometry, conservative mobile LOD, sharp rendering, contextual overlays, and reliable static deployment.
 ---
 
-Updated 2026-10-02: detailed campus assets and textures are restored, with an immersive fullscreen interface on both desktop and mobile.
+Updated 2026-10-03: the detailed fullscreen campus now includes three automatic traffic cars, rolling wheels, fixed rear tracking, and the original circuit-style opening animation.
 
 The primary experience of a parking twin is exploring the campus: rotating, zooming, entering a zone, and inspecting vehicles. Occupancy charts and operational records should appear when requested, without permanently reducing the scene area.
 
@@ -20,7 +20,7 @@ The first simplification went too far: removing textures and substituting box bu
 | Asset | Desktop | Mobile |
 |---|---:|---:|
 | Campus GLB | 18,953,916 bytes | 16,444,988 bytes |
-| Vehicle template GLB | 1,416,044 bytes | 1,357,092 bytes |
+| Vehicle template GLB | 1,420,956 bytes | 1,350,928 bytes |
 | Campus image textures | 18 | 18 |
 | Vehicle image textures | 7 | 7 |
 | Parked vehicle instances | 126 | 126 |
@@ -29,19 +29,26 @@ Campus and vehicle payloads total about 20.37 MB and 17.80 MB, respectively: rou
 
 ## Detailed geometry shared across vehicles
 
-The source campus stored repeated vehicles as duplicated geometry. The pipeline recovers their placement and orientation from recurring plate geometry, then replaces them with a detailed shared template. Seven material parts submit matrices for 126 thin instances.
+The source campus stored repeated vehicles as duplicated geometry. The pipeline recovers their placement and orientation from recurring plate geometry, then replaces them with a detailed shared template. Seven material layers are retained; after separating four tyres and their rims, each geometry part submits matrices for 126 thin instances.
 
 ```typescript
-mesh.thinInstanceSetBuffer('matrix',
-  new Float32Array(placements.matrices.flat()), 16, true);
+const matrices = new Float32Array(placements.matrices.flatMap(matrix =>
+  Array.from(partTransform.multiply(Matrix.FromArray(matrix)).asArray())));
+mesh.thinInstanceSetBuffer('matrix', matrices, 16, true);
 mesh.thinInstanceEnablePicking = true;
 ```
 
 Picking returns the actual instance. A camera flight enters the selected car's position; a separate demonstration vehicle follows a route sampled from the original animation and supports camera tracking and pause. Reusing the authored route avoids a hand-written rectangular path through buildings.
 
-Static campus geometry is batched by material, deduplicated, welded, conservatively simplified, and resized at different desktop/mobile texture budgets. Immutable world matrices and materials are frozen, while the camera and demonstration vehicle remain dynamic. The complete revised scene contains 77 meshes.
+Static campus geometry is batched by material, deduplicated, welded, conservatively simplified, and resized at different desktop/mobile texture budgets. Immutable world matrices and materials are frozen, while the camera and traffic cars remain dynamic. With three cars and independent wheels, the complete revised scene contains 121 meshes.
 
 ![Detailed vehicle inspection](/images/project-parking-detail.png)
+
+## Vehicle motion and fixed rear tracking
+
+The source car faces -Y with -Z up, and its geometry is tilted. The offline pipeline derives a basis from the four wheel positions and normalizes the car to +Z forward and +Y up; inverse transforms preserve the parked layout. Separate tyre and rim nodes roll by travelled distance divided by wheel radius. Three authored routes use staggered offsets and speeds, and pausing stops both translation and wheel rotation.
+
+Tracking recomputes a fixed position behind the current heading every frame, rather than only moving the orbit camera target. Camera inertia is cleared during tracking and manual controls return when tracking stops. The original circuit opening is anonymized and compressed to 1080p; it loops while assets load, finishes when ready, and includes skip and media-failure handling.
 
 ## Contextual UI over an unchanged canvas
 
@@ -77,7 +84,7 @@ The scene class owns engine lifecycle, resize observation, camera interaction, a
 
 Production lives under `/smartParking/`, with a directly refreshable `/smartParking/mobile` route. Static releases use timestamped directories, Nginx configuration backups, an atomic symlink switch, and rollback on failed validation. Fingerprinted scripts cache long-term; versioned models use gzip and short-term caching.
 
-Validation includes type checking, four data tests, four GLB contracts, fifteen browser interaction checks, portrait/landscape touch checks, and production HTTPS verification. The main lesson is to define the experience that must survive optimization, then reduce redundant work around it.
+Validation includes type checking, eight data/kinematics tests, four GLB and wheel/route contracts, and forty-six local browser checks covering traffic, fixed tracking, slow loading, and portrait/landscape touch controls. Production HTTPS is checked separately after deployment. The main lesson is to define the experience that must survive optimization, then reduce redundant work around it.
 
 ## References
 
