@@ -13,11 +13,11 @@ export interface ProjectCard {
 export const projects: ProjectCard[] = [
   {
     key: 'parking',
-    title: { zh: '智慧停车三维数字孪生', en: '3D Smart Parking', ja: 'スマート駐車場デジタルツイン' },
+    title: { zh: '智慧停车数字孪生', en: '3D Smart Parking', ja: 'スマート駐車場デジタルツイン' },
     description: {
-      zh: '把园区三维场景、泊位态势、区域导航和告警交互连接起来，提供触控友好的轻量手机版。',
-      en: 'An interactive campus twin with occupancy, zone navigation, demo alerts, and a lightweight touch-first mobile view.',
-      ja: '園区の3D表示、駐車状況、エリア移動、通知を統合。タッチ操作に適した軽量モバイル版も提供。',
+      zh: '全屏探索精细三维园区，点击展开泊位态势、记录与告警；桌面和手机共享细腻模型与触控交互。',
+      en: 'Explore a detailed fullscreen campus with contextual occupancy, records and alerts, plus a refined touch-first mobile view.',
+      ja: '精細な園区を全画面で探索。駐車状況・記録・通知は必要時に表示し、モバイルも同じモデルをタッチ操作。',
     },
     path: '/smartParking/',
     image: '/images/project-parking.png',

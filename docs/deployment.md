@@ -7,7 +7,7 @@
 - `/quant/`：AI 量化公开查看，采集、AI、回测和配置写操作使用后端短期令牌。
 - `/crossBorderTrend/`：公开前台，采集使用操作令牌，管理区使用项目 JWT。
 - `/smartCockpit/`：智能座舱公开查看，聊天、上传和报告等操作使用后端短期令牌。
-- `/smartParking/`：智慧停车独立静态前端；`/smartParking/mobile` 为轻量手机页面。
+- `/smartParking/`：智慧停车独立静态前端；`/smartParking/mobile` 为精细横屏手机页面。
 
 ### 三维停车独立发布
 
