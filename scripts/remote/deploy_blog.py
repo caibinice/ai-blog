@@ -43,6 +43,15 @@ def main() -> None:
 set -euo pipefail
 root=/opt/ai-blog
 target="$root/releases/{release}"
+previous="$(readlink -f "$root/current" 2>/dev/null || true)"
+rollback() {{
+  if [[ -n "$previous" && -d "$previous" ]]; then
+    ln -sfn "$previous" "$root/current.next"
+    mv -Tf "$root/current.next" "$root/current"
+    nginx -t && systemctl reload nginx || true
+  fi
+}}
+trap rollback ERR
 mkdir -p "$target"
 tar -xzf {remote_archive} -C "$target"
 chown -R aiapps:aiapps "$target"
@@ -51,10 +60,12 @@ ln -sfn "$target" "$root/current.next"
 mv -Tf "$root/current.next" "$root/current"
 nginx -t
 systemctl reload nginx
+curl -fsS --resolve caibinice.com:443:127.0.0.1 https://caibinice.com/ >/dev/null
+curl -fsS --resolve caibinice.com:443:127.0.0.1 https://caibinice.com/articles >/dev/null
+trap - ERR
 find "$root/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\\n' \
   | sort -nr | tail -n +6 | cut -d' ' -f2- | xargs -r rm -rf
 rm -f {remote_archive}
-curl -fsS --resolve caibinice.com:443:127.0.0.1 https://caibinice.com/ >/dev/null
 echo 'Blog release activated: {release}'
 """,
                 root=True,
