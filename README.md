@@ -69,6 +69,19 @@ token 只在本地翻译或部署阶段读取，不进入浏览器。
 
 部署方式见 [`docs/deployment.md`](docs/deployment.md) 中的三维停车说明。
 
+## 独立 Games 仓库
+
+拼豆游戏源码、素材、100 关规则、测试和构建发布工具已迁移到
+[caibinice/games](https://github.com/caibinice/games)，本机 `E:\codes\games`。
+线上仍为 [拼就完了](https://caibinice.com/games/pindou/)，Nginx 映射独立的
+`/opt/pindou/www`，不包含在博客 `dist` 中。
+
+发布在 games 执行 `pwsh -File scripts/deploy.ps1`：先构建 `dist`，再打包部署。
+真实 GitHub / SSH 配置仅放在 games 忽略的 `credentials/config.ini`，不借用博客凭据。
+博客仅保留共享路由、兼容发布入口及
+[`docs/deployment.md`](docs/deployment.md) 中的发布说明；新仓库详细手册见
+[Games 部署文档](https://github.com/caibinice/games/blob/main/docs/deployment.md)。
+
 ## License
 
 [MIT](LICENSE)

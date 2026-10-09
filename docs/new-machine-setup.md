@@ -24,6 +24,7 @@
 ```
 
 四个仓库都从默认的 `main` 分支运行。
+停车和 Games 为可选独立仓库，不扩展上述四仓库 bootstrap 的构建 / 部署范围。
 
 ## 2. 克隆与同步
 
@@ -108,13 +109,15 @@ Authorization header，不把 token 写进 remote URL 或 Git 配置。必须明
 要提交的文件，避免把其他 agent 或个人文件混入提交：
 
 ```powershell
-pwsh -File D:\codes\ai-blog\scripts\github-push.ps1 `
+& D:\codes\ai-blog\scripts\github-push.ps1 `
   -Project cockpit `
   -Message 'docs: clarify reproducible workspace setup' `
   -Files @('README.md', 'docs/production-deployment.md')
 ```
 
-`-Project` 可选 `blog`、`quant`、`crossborder`、`cockpit`。脚本会检查固定
+`-Project` 可选 `blog`、`quant`、`crossborder`、`cockpit`、`parking`、`games`。
+其中 `games` 独立读取 `<codes-root>/games/credentials/config.ini`，其他项目沿用博客共享凭据。
+脚本会检查固定
 分支、先 fetch 并拒绝覆盖远端新提交；仅推送已有本地提交时使用
 `-PushOnly`，只检查认证和同步状态时使用 `-ValidateOnly`。
 提交作者默认使用公开的 `caibinice` 和 GitHub noreply 地址，仅对当前脚本
@@ -137,3 +140,30 @@ npm --prefix D:\codes\ai-blog run build
 mvn -f D:\codes\crossborder-trend-report\backend\pom.xml test
 mvn -f D:\codes\enterprise-ai-cockpit\backend\pom.xml test
 ```
+
+## 7. 可选 Games 仓库：拼豆独立复现
+
+游戏仓库不依赖上述四仓库的凭据 / Python 环境。与博客放在同一父目录时，
+发布会同步博客已有的游戏 Nginx 镜像；单独克隆也可发布。
+
+```powershell
+Set-Location E:\codes
+git clone https://github.com/caibinice/games.git games
+Set-Location games
+npm ci
+python -m venv .venv
+& .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+Copy-Item credentials\config.example.ini credentials\config.ini
+# 填写本机 [github] / [remote.ssh]，或安全复制旧机器的这一份私有文件
+pwsh -File scripts\deploy.ps1 -BuildOnly
+npm run dev
+# 完整检查、构建、打包并发布到既有 /opt/pindou/www 映射
+pwsh -File scripts\deploy.ps1
+```
+
+公网入口保持 [https://caibinice.com/games/pindou/](https://caibinice.com/games/pindou/)。
+GitHub 仅保存 `credentials/config.example.ini`，实际配置、`.venv`、`.deploy` 和 `dist` 均被忽略。
+博客全量发布不含游戏产物，但共享 `ai-platform-routes.conf` 必须保留拼豆映射。
+独立推送可用 games 的 `scripts/github-push.py`，也可使用博客
+`scripts/github-push.ps1 -Project games`；详细过程见
+[Games 部署手册](https://github.com/caibinice/games/blob/main/docs/deployment.md)。

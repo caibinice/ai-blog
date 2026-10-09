@@ -23,3 +23,6 @@ __pycache__/
 *.py[cod]
 .DS_Store
 Thumbs.db
+
+# Independent games live in https://github.com/caibinice/games.
+/public/games/

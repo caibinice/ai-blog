@@ -8,6 +8,7 @@
 - `/crossBorderTrend/`：公开前台，采集使用操作令牌，管理区使用项目 JWT。
 - `/smartCockpit/`：智能座舱公开查看，聊天、上传和报告等操作使用后端短期令牌。
 - `/smartParking/`：智慧停车独立静态前端；`/smartParking/mobile` 为精细横屏手机页面。
+- `/games/pindou/`：拼豆游戏独立静态前端，源码在 Games 仓库，100 关。
 
 ### 三维停车独立发布
 
@@ -28,6 +29,44 @@ E:\codes\ai-quantitative-trading\.venv\Scripts\python.exe scripts\deploy.py
 HTML、模型短期缓存，带指纹JS/CSS长期缓存，预压缩文件由gzip_static提供。
 
 此项目为前端模拟数据演示，不新增后台服务；原四仓库bootstrap和全量发布保持原范围。
+
+### 拼豆游戏独立发布（Games）
+
+2026-10-09 起，源码、素材、测试及发布工具统一由
+[caibinice/games](https://github.com/caibinice/games) 维护，本机目录 `E:\codes\games`。
+博客不再存放 `public/games/pindou`，不再构建游戏；保留共享 Nginx 路由及
+`deploy/nginx/pindou.conf` 映射镜像，防止后续博客发布覆盖该路由。
+
+```powershell
+Set-Location E:\codes\games
+npm ci
+python -m venv .venv
+& .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+# 新机器复制模板后填写本机值；已有配置时保留原文件
+Copy-Item credentials\config.example.ini credentials\config.ini
+pwsh -File scripts\deploy.ps1
+& .\.venv\Scripts\python.exe scripts\verify.py
+```
+
+首次准备之后只需在 games 执行 `pwsh -File scripts/deploy.ps1`。
+入口依次执行检查、55 项 Node 测试、构建、凭据排除审计及 8 项发布测试，再上传构建包；
+`-BuildOnly` 只运行本地门禁，`-SkipInstall` 跳过 npm ci。
+`scripts/remote/deploy_pindou.py` 仅保留兼容入口，转调兄弟 games 的完整发布链。
+
+- 线上地址：[https://caibinice.com/games/pindou/](https://caibinice.com/games/pindou/)。
+- 包来源：games 的 `dist/`，含运行文件、gzip 及 SHA-256 清单，不含源码工具或凭据。
+- 服务器：`/opt/pindou/releases/<UTC时间>-<Git提交>/www/games/pindou/`。
+- Nginx：`/opt/pindou/www` → 当前 release 的 `www`；公共片段仍为
+  `/etc/nginx/snippets/ai-platform-routes.conf` 中的 `begin-pindou-static-game`。
+- 凭据：仅 games 本机 `credentials/config.ini` 的 `[github]`、`[remote.ssh]`；
+  文件已忽略，GitHub 只保留模板，不依赖 ai-blog 或量化项目的配置 / Python 环境。
+- 回滚：发布前备份旧链接及公共片段，原子切换、`nginx -t` / reload 后验证游戏全部文件、
+  MIME、404、博客及停车路由；失败自动恢复。保留旧 Cookie 及进度。
+- 原四仓库 bootstrap / 全量发布范围不变，Games 与停车均独立发布。
+
+独立开发、换机、GitHub 提交及回滚命令详见
+[Games 发布手册](https://github.com/caibinice/games/blob/main/docs/deployment.md)，
+迁移记录见 [`pindou-game.md`](pindou-game.md)。
 
 本地运行 `pwsh -File scripts/deploy.ps1` 会按 lockfile 重装三个前端依赖，
 执行博客检查、两个 Java 项目测试/打包及各自前端生产构建，再上传静态文件

@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet('blog', 'quant', 'crossborder', 'cockpit', 'parking')]
+  [ValidateSet('blog', 'quant', 'crossborder', 'cockpit', 'parking', 'games')]
   [string]$Project,
   [string]$Message = '',
   [string[]]$Files = @(),
@@ -18,10 +18,15 @@ $definitions = @{
   crossborder = @{ Directory = 'crossborder-trend-report'; Branch = 'main'; Namespace = 'crossborder' }
   cockpit = @{ Directory = 'enterprise-ai-cockpit'; Branch = 'main'; Namespace = 'cockpit' }
   parking = @{ Directory = '3dSmartParking'; Branch = 'main'; Namespace = 'parking' }
+  games = @{ Directory = 'games'; Branch = 'main'; Namespace = 'games' }
 }
 $definition = $definitions[$Project]
 $projectRoot = Join-Path $codesRoot $definition.Directory
-$credentialsPath = Join-Path $blogRoot 'credentials.txt'
+$credentialsPath = if ($Project -eq 'games') {
+  Join-Path $projectRoot 'credentials/config.ini'
+} else {
+  Join-Path $blogRoot 'credentials.txt'
+}
 
 function Import-IniFile {
   param([Parameter(Mandatory = $true)][string]$Path)
@@ -47,7 +52,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $projectRoot '.git'))) {
   throw "项目不存在或不是 Git 仓库：$projectRoot"
 }
 if (-not (Test-Path -LiteralPath $credentialsPath)) {
-  throw "缺少共享凭据：$credentialsPath"
+  throw "缺少本机凭据：$credentialsPath"
 }
 $credentials = Import-IniFile -Path $credentialsPath
 $token = ''
@@ -58,7 +63,7 @@ foreach ($section in @("$($definition.Namespace).github", 'github')) {
   }
 }
 if ([string]::IsNullOrWhiteSpace($token)) {
-  throw '共享 credentials.txt 缺少 [github] token。'
+  throw "本机凭据 $credentialsPath 缺少 [github] token。"
 }
 $githubSection = if ($credentials.ContainsKey("$($definition.Namespace).github")) {
   $credentials["$($definition.Namespace).github"]
