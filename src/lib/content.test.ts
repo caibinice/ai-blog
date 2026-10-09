@@ -15,14 +15,39 @@ describe('localized static content', () => {
   it.each(locales)('builds deterministic static article pages in %s', (locale) => {
     expect(articlePageCount()).toBe(2)
     expect(listArticlePage(locale, 1)).toHaveLength(6)
-    expect(listArticlePage(locale, 1)[0].slug).toBe('parking-agent-operations')
-    expect(listArticlePage(locale, 2).map(({ slug }) => slug)).toEqual(['llm-sentiment-walk-forward', 'cross-border-trends', 'trust-the-backtest', 'ai-quant-system'])
+    expect(listArticlePage(locale, 1)[0].slug).toBe('agent-node-monitoring-replay')
+    expect(listArticlePage(locale, 2).map(({ slug }) => slug)).toEqual(['multi-branch-feature-migration', 'enterprise-ai-cockpit', 'llm-sentiment-walk-forward', 'cross-border-trends', 'trust-the-backtest', 'ai-quant-system'])
+  })
+
+  it('keeps the requested writing dates and cockpit case links', () => {
+    expect(getArticle('zh', 'agent-workflow-orchestration')?.date).toBe('2026-10-06')
+    expect(getArticle('zh', 'agent-node-monitoring-replay')?.date).toBe('2026-10-15')
+    for (const locale of locales) {
+      for (const slug of ['agent-workflow-orchestration', 'agent-node-monitoring-replay']) {
+        expect(getArticle(locale, slug)?.body).toContain('/smartCockpit/workflow')
+        expect(getArticle(locale, slug)?.body).toContain('/images/cockpit-agent-')
+      }
+    }
   })
 
   it('keeps project navigation in every translated article', () => {
     for (const locale of locales) {
       for (const meta of articleMeta.filter(({ projectPath }) => projectPath)) {
         expect(getArticle(locale, meta.slug)?.body).toContain(meta.projectPath)
+      }
+    }
+  })
+
+  it('describes the complete cockpit graph before the two deep dives', () => {
+    for (const locale of locales) {
+      const workflow = getArticle(locale, 'agent-workflow-orchestration')!.body
+      expect(workflow).toContain('/images/cockpit-agent-overview.png')
+      for (const term of ['ReplaceStrategy', 'tool_plan', 'tool_execute', 'multi_plan', 'multi_review']) {
+        expect(workflow).toContain(term)
+      }
+      const monitoring = getArticle(locale, 'agent-node-monitoring-replay')!.body
+      for (const term of ['vision', 'retrieve', 'requery', 'report_mcp', 'human_reply', 'run.resumed']) {
+        expect(monitoring).toContain(term)
       }
     }
   })

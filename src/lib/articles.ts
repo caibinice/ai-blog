@@ -27,6 +27,8 @@ export const articleMeta: ArticleMeta[] = [
   { slug: 'sub2api-enterprise-ai-gateway', date: '2026-08-23', tags: ['AI Gateway', 'Sub2API', 'Go', 'Redis', 'Architecture'] },
   { slug: '3d-smart-parking-engineering', date: '2026-10-01', tags: ['3D', 'Babylon.js', 'WebGPU', 'Performance', 'Mobile'], projectPath: '/smartParking/' },
   { slug: 'parking-agent-operations', date: '2026-10-04', tags: ['AI Agent', 'AG-UI', 'Data Engineering', '3D', 'RAG'], projectPath: '/smartParking/' },
+  { slug: 'agent-workflow-orchestration', date: '2026-10-06', tags: ['AI Agent', 'Graph', 'Spring AI Alibaba', 'Tool Calling'], projectPath: '/smartCockpit/workflow' },
+  { slug: 'agent-node-monitoring-replay', date: '2026-10-15', tags: ['AI Agent', 'Observability', 'SSE', 'Replay'], projectPath: '/smartCockpit/workflow' },
 ]
 
 const modules = import.meta.glob('../content/**/*.md', {
