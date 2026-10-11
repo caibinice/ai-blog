@@ -30,12 +30,12 @@ HTML、模型短期缓存，带指纹JS/CSS长期缓存，预压缩文件由gzip
 
 此项目为前端模拟数据演示，不新增后台服务；原四仓库bootstrap和全量发布保持原范围。
 
-### 拼豆游戏独立发布（Games）
+### 多游戏独立发布（Games）
 
-2026-10-09 起，源码、素材、测试及发布工具统一由
-[caibinice/games](https://github.com/caibinice/games) 维护，本机目录 `E:\codes\games`。
-博客不再存放 `public/games/pindou`，不再构建游戏；保留共享 Nginx 路由及
-`deploy/nginx/pindou.conf` 映射镜像，防止后续博客发布覆盖该路由。
+[caibinice/games](https://github.com/caibinice/games) 是独立的游戏仓库，本机 `E:\codes\games`。
+2026-10-11 起，每个游戏平级放在 `games/<id>/`，各自维护 public / tests / docs；
+共享工具自动发现游戏并生成 `/games/` 大厅。博客不构建游戏，保留共享路由及
+`deploy/nginx/games.conf` 镜像，后续博客发布不会覆盖游戏路径。
 
 ```powershell
 Set-Location E:\codes\games
@@ -44,29 +44,35 @@ python -m venv .venv
 & .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 # 新机器复制模板后填写本机值；已有配置时保留原文件
 Copy-Item credentials\config.example.ini credentials\config.ini
-pwsh -File scripts\deploy.ps1
+pwsh -File scripts\deploy.ps1                         # 一次原子发布全部游戏
+pwsh -File scripts\deploy.ps1 -Games pindou           # 只更新拼豆，保留其他游戏
+pwsh -File scripts\deploy.ps1 -Games goose            # 只更新抓大鹅
+pwsh -File scripts\deploy.ps1 -Games 'pindou,goose'   # 同时发布所选游戏
 & .\.venv\Scripts\python.exe scripts\verify.py
 ```
 
-首次准备之后只需在 games 执行 `pwsh -File scripts/deploy.ps1`。
-入口依次执行检查、55 项 Node 测试、构建、凭据排除审计及 8 项发布测试，再上传构建包；
-`-BuildOnly` 只运行本地门禁，`-SkipInstall` 跳过 npm ci。
-`scripts/remote/deploy_pindou.py` 仅保留兼容入口，转调兄弟 games 的完整发布链。
+入口执行源码检查、全部游戏 / 构建测试、选定游戏构建、凭据排除审计及 Python 发布测试，
+再打包上传 dist。`-BuildOnly` 只运行本地门禁；`-SkipInstall` 仅跳过 npm ci。
+博客 `scripts/remote/deploy_pindou.py` 是兼容入口，显式转调 `-Games pindou`，而不是发布全部游戏。
 
-- 线上地址：[https://caibinice.com/games/pindou/](https://caibinice.com/games/pindou/)。
-- 包来源：games 的 `dist/`，含运行文件、gzip 及 SHA-256 清单，不含源码工具或凭据。
-- 服务器：`/opt/pindou/releases/<UTC时间>-<Git提交>/www/games/pindou/`。
-- Nginx：`/opt/pindou/www` → 当前 release 的 `www`；公共片段仍为
-  `/etc/nginx/snippets/ai-platform-routes.conf` 中的 `begin-pindou-static-game`。
-- 凭据：仅 games 本机 `credentials/config.ini` 的 `[github]`、`[remote.ssh]`；
-  文件已忽略，GitHub 只保留模板，不依赖 ai-blog 或量化项目的配置 / Python 环境。
-- 回滚：发布前备份旧链接及公共片段，原子切换、`nginx -t` / reload 后验证游戏全部文件、
-  MIME、404、博客及停车路由；失败自动恢复。保留旧 Cookie 及进度。
-- 原四仓库 bootstrap / 全量发布范围不变，Games 与停车均独立发布。
+- 地址：[游戏大厅](https://caibinice.com/games/)、[拼豆](https://caibinice.com/games/pindou/)、
+  [抓大鹅 3D](https://caibinice.com/games/goose/)。拼豆原地址、100 关与 Cookie 不变。
+- 源码：`games/pindou/`、`games/goose/` 平级独立，新游戏按同一结构扩展。
+- 包：`dist/` 内选定游戏、共享大厅、gzip、manifest v2 / SHA-256，不含凭据或源码工具。
+- 服务器：`/opt/games/releases/<UTC时间>-<Git提交>/www/games/<id>/`；
+  `/opt/games/www` 原子软链接指向当前完整 release。旧 `/opt/pindou` 保留作迁移回滚。
+- Nginx：`/etc/nginx/snippets/ai-platform-routes.conf` 的 `begin-games-static-app` 块，
+  映射 `/games/` 及所有子游戏，镜像 `deploy/nginx/games.conf`。
+- 单发：继承旧完整 release，只替换所选游戏；未选游戏逐文件哈希核验不变。
+  批量发：新目录中准备所有产物，再一次切换整个 www。
+- 凭据：仅 Games 忽略的 `credentials/config.ini` 的 `[github]` / `[remote.ssh]`，不借用博客环境。
+- 回滚：SSH 发布锁、路由哈希并发保护、旧链接 / 配置备份、`nginx -t` / reload，
+  再验证发布文件哈希 / MIME / 404 / 博客 / 停车；失败自动恢复，玩家进度保留。
+- 原四仓库 bootstrap / 全量发布范围不变，Games 和停车各自独立发布。
 
-独立开发、换机、GitHub 提交及回滚命令详见
-[Games 发布手册](https://github.com/caibinice/games/blob/main/docs/deployment.md)，
-迁移记录见 [`pindou-game.md`](pindou-game.md)。
+详细新增游戏、单发 / 批发及回滚见 [Games 发布手册](https://github.com/caibinice/games/blob/main/docs/deployment.md)。
+拼豆历史见 [`pindou-game.md`](pindou-game.md)，抓大鹅实现见
+[Goose 说明](https://github.com/caibinice/games/blob/main/games/goose/docs/README.md)。
 
 本地运行 `pwsh -File scripts/deploy.ps1` 会按 lockfile 重装三个前端依赖，
 执行博客检查、两个 Java 项目测试/打包及各自前端生产构建，再上传静态文件

@@ -141,7 +141,7 @@ mvn -f D:\codes\crossborder-trend-report\backend\pom.xml test
 mvn -f D:\codes\enterprise-ai-cockpit\backend\pom.xml test
 ```
 
-## 7. 可选 Games 仓库：拼豆独立复现
+## 7. 可选 Games 仓库：多个独立 H5 游戏
 
 游戏仓库不依赖上述四仓库的凭据 / Python 环境。与博客放在同一父目录时，
 发布会同步博客已有的游戏 Nginx 镜像；单独克隆也可发布。
@@ -157,13 +157,19 @@ Copy-Item credentials\config.example.ini credentials\config.ini
 # 填写本机 [github] / [remote.ssh]，或安全复制旧机器的这一份私有文件
 pwsh -File scripts\deploy.ps1 -BuildOnly
 npm run dev
-# 完整检查、构建、打包并发布到既有 /opt/pindou/www 映射
+# 完整检查、构建、打包并发布全部游戏到 /opt/games/www
 pwsh -File scripts\deploy.ps1
+# 单个更新会继承并保留其他游戏
+pwsh -File scripts\deploy.ps1 -Games goose
+# 多个游戏一次切换
+pwsh -File scripts\deploy.ps1 -Games 'pindou,goose'
 ```
 
-公网入口保持 [https://caibinice.com/games/pindou/](https://caibinice.com/games/pindou/)。
+公网入口：[游戏大厅](https://caibinice.com/games/)、[拼豆](https://caibinice.com/games/pindou/)、
+[抓大鹅 3D](https://caibinice.com/games/goose/)。原拼豆地址和 Cookie 保持不变。
 GitHub 仅保存 `credentials/config.example.ini`，实际配置、`.venv`、`.deploy` 和 `dist` 均被忽略。
-博客全量发布不含游戏产物，但共享 `ai-platform-routes.conf` 必须保留拼豆映射。
+博客全量发布不含游戏产物，但共享 `ai-platform-routes.conf` 必须保留
+`begin-games-static-app` 块，镜像为 `deploy/nginx/games.conf`。旧 `/opt/pindou` 保留为迁移回滚来源。
 独立推送可用 games 的 `scripts/github-push.py`，也可使用博客
 `scripts/github-push.ps1 -Project games`；详细过程见
 [Games 部署手册](https://github.com/caibinice/games/blob/main/docs/deployment.md)。

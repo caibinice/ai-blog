@@ -10,15 +10,16 @@
 
 ## 发布约定
 
-在 `E:/codes/games` 执行 `pwsh -File scripts/deploy.ps1`。
-先检查、测试并构建 `dist/`，再打包到 `/opt/pindou/releases/<UTC时间>-<Git提交>/www/`，
-原子切换 `/opt/pindou/www`。Nginx 继续映射 `/games/pindou/`。
+在 `E:/codes/games` 执行 `pwsh -File scripts/deploy.ps1 -Games pindou` 单发拼豆，
+或不加 `-Games` 发布全部游戏。2026-10-11 起，源码位于 `games/pindou/public`，
+先检查、测试并构建 `dist/`，再打包到 `/opt/games/releases/<UTC时间>-<Git提交>/www/`，
+原子切换 `/opt/games/www`。Nginx 继续映射 `/games/pindou/`，未选择的游戏逐文件校验不变。
 真实配置在新仓库忽略的 `credentials/config.ini`，GitHub 仅存模板。
 
 博客仅保留公共 Nginx 游戏片段、映射模板、本文及发布手册。
 旧 `scripts/remote/deploy_pindou.py` 是薄兼容入口，转调 games 的完整发布链；
 博客全量构建 / 部署不再打包游戏。后续博客 Nginx 更新须保留
-`begin-pindou-static-game` 路由块。
+`begin-games-static-app` 公共游戏路由块及 `deploy/nginx/games.conf` 镜像。
 
 原代码和相关发布说明已备份到
 `E:/Documents/AI/codex/backups/games-repo-migration-20261009-220038/`。
@@ -36,3 +37,12 @@
   `/opt/pindou/backups/20261009142427-3b16180dc5/`。
 - 本机回滚记录：
   `E:/Documents/AI/codex/backups/games-pindou-20261009-222427-698186/rollback.json`。
+
+## 2026-10-11 多游戏目录改造
+
+- `games/pindou` 与 `games/goose` 平级，各自维护 public / tests / docs，共享工具自动发现游戏。
+- 第一阶段提交 `4424b9e31c7cf895dddb80e256d7784d414ba769`；拼豆 33 个运行文件逐字节不变。
+- 首个统一 release `20261011012937-4424b9e31c`，公网 37 个运行文件（含大厅）SHA-256 全部一致。
+- 原 150 份 v3 / v4 存档夹具、100 关浏览器回归通过；旧 `/opt/pindou` 原样保留。
+- 本机首阶段回滚：`E:/Documents/AI/codex/backups/games-20261011-092937-111076/rollback.json`。
+- 后续游戏统一使用 `/games/<id>/`，详细批量发布及回滚见 Games 发布手册。

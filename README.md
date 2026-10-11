@@ -71,12 +71,14 @@ token 只在本地翻译或部署阶段读取，不进入浏览器。
 
 ## 独立 Games 仓库
 
-拼豆游戏源码、素材、100 关规则、测试和构建发布工具已迁移到
+拼豆、抓大鹅 3D 的源码、素材、关卡、测试和构建发布工具统一放在
 [caibinice/games](https://github.com/caibinice/games)，本机 `E:\codes\games`。
-线上仍为 [拼就完了](https://caibinice.com/games/pindou/)，Nginx 映射独立的
-`/opt/pindou/www`，不包含在博客 `dist` 中。
+各游戏在 `games/pindou`、`games/goose` 等平级目录维护。
+线上入口：[游戏大厅](https://caibinice.com/games/)、[拼就完了](https://caibinice.com/games/pindou/)、
+[抓大鹅 3D](https://caibinice.com/games/goose/)。Nginx 映射统一的 `/opt/games/www`，不包含在博客 `dist` 中。
 
-发布在 games 执行 `pwsh -File scripts/deploy.ps1`：先构建 `dist`，再打包部署。
+发布在 games 执行 `pwsh -File scripts/deploy.ps1`：先构建 `dist`，再一次原子发布全部游戏。
+`-Games pindou` 或 `-Games goose` 单独更新一个，`-Games 'pindou,goose'` 批量发布，未选游戏保持原样。
 真实 GitHub / SSH 配置仅放在 games 忽略的 `credentials/config.ini`，不借用博客凭据。
 博客仅保留共享路由、兼容发布入口及
 [`docs/deployment.md`](docs/deployment.md) 中的发布说明；新仓库详细手册见

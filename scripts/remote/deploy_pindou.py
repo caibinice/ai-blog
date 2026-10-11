@@ -10,7 +10,7 @@ def main() -> None:
     if not entry.is_file():
         raise SystemExit('Clone https://github.com/caibinice/games into the sibling games directory first.')
     # Run the independent check/test/build/package chain, never blog source files.
-    result = subprocess.run(['pwsh', '-NoLogo', '-NoProfile', '-File', str(entry), *sys.argv[1:]])
+    result = subprocess.run(['pwsh', '-NoLogo', '-NoProfile', '-File', str(entry), '-Games', 'pindou', *sys.argv[1:]])
     raise SystemExit(result.returncode)
 
 
