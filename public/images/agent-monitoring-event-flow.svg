@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="980" viewBox="0 0 800 980" role="img" aria-labelledby="title desc">
+  <title id="title">Agent 执行事件、实时监控与历史回放</title>
+  <desc id="desc">Graph 节点经过 wrapped 包装层，写入 RunStore。有序事件通过 SSE 实时发送，也在节点边界保存 JSON，经历史 API 载入。两条路径汇入前端 events 数组，用全部事件或截断前缀驱动节点高亮、详情、耗时与专家卡片。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#7389a8"/></marker>
+    <style>
+      text { font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; text-anchor: middle; fill: #26354a; font-size: 23px; }
+      .node { fill: #fff; stroke: #8aaee3; stroke-width: 2; }
+      .storage { fill: #edf4ff; stroke: #8aaee3; stroke-width: 2; }
+      .flow { fill: none; stroke: #7389a8; stroke-width: 2.5; marker-end: url(#arrow); }
+      .note { fill: #64748b; font-size: 19px; }
+    </style>
+  </defs>
+  <rect width="800" height="980" rx="20" fill="#f8faff"/>
+  <text x="400" y="42" font-weight="700" font-size="27">同一份有序事件，两种查看方式</text>
+  <g class="flow">
+    <path d="M400 150V180"/><path d="M400 250V280"/>
+    <path d="M400 350V385H200V420"/><path d="M400 385H600V420"/>
+    <path d="M600 490V530"/>
+    <path d="M200 490V615H335V650"/><path d="M600 600V615H465V650"/>
+    <path d="M400 720V760"/><path d="M400 830V870"/>
+  </g>
+  <rect class="node" x="225" y="80" width="350" height="70" rx="12"/><text x="400" y="123">Graph 实际执行节点</text>
+  <rect class="node" x="225" y="180" width="350" height="70" rx="12"/><text x="400" y="223">wrapped 统一包装层</text>
+  <rect class="storage" x="225" y="280" width="350" height="70" rx="12"/><text x="400" y="323">RunStore 有序事件记录</text>
+  <rect class="node" x="40" y="420" width="320" height="70" rx="12"/><text x="200" y="463">SSE 实时增量推送</text>
+  <rect class="storage" x="440" y="420" width="320" height="70" rx="12"/><text x="600" y="463">节点边界保存 JSON</text>
+  <rect class="node" x="440" y="530" width="320" height="70" rx="12"/><text x="600" y="573">历史记录 API</text>
+  <rect class="storage" x="225" y="650" width="350" height="70" rx="12"/><text x="400" y="693">前端 events 数组</text>
+  <rect class="node" x="150" y="760" width="500" height="70" rx="12"/><text x="400" y="803">实时全部事件 / 回放截断前缀</text>
+  <rect class="node" x="80" y="870" width="640" height="70" rx="12"/><text x="400" y="913">界面节点高亮、详情、耗时与专家卡片</text>
+  <text class="note" x="400" y="965">回放只改变前端游标，不重新执行业务</text>
+</svg>
